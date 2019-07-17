@@ -310,7 +310,7 @@
       console.log('createOffer() succsess in promise');
       return peerConnection.setLocalDescription(sessionDescription);
     }).then(function() {
-      console.log('setLocalDescription() succsess in promise');
+      console.log('setLocalDescription() success in promise');
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
       //sendSdp(peerConnection.localDescription);
@@ -345,7 +345,7 @@
       console.log('createAnswer() succsess in promise');
       return peerConnection.setLocalDescription(sessionDescription);
     }).then(function() {
-      console.log('setLocalDescription() succsess in promise');
+      console.log('setLocalDescription() success in promise');
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
       //sendSdp(peerConnection.localDescription);
