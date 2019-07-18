@@ -123,7 +123,7 @@
     getDeviceStream({video: true, audio: true})
     .then(function (stream) { // success
       localStream = stream;
-      playVideo(localVideo, stream);
+      //playVideo(localVideo, stream);
     }).catch(function (error) { // error
       console.error('getUserMedia error:', error);
       return;
