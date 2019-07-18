@@ -73,7 +73,7 @@
   // or you can use chrome app (only work with Chrome)
   //  https://chrome.google.com/webstore/detail/simple-message-server/bihajhgkmpfnmbmdnobjcdhagncbkmmp
   //
-  let wsUrl = 'ws://ec2-52-68-208-246.ap-northeast-1.compute.amazonaws.com:3001/';
+  let wsUrl = 'wss://ec2-52-68-208-246.ap-northeast-1.compute.amazonaws.com:3001/';
   let ws = new WebSocket(wsUrl);
   ws.onopen = function(evt) {
     console.log('ws open()');
