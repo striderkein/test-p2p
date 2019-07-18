@@ -252,13 +252,13 @@
       if (evt.candidate) {
         console.log('candidate: ' + evt.candidate);
         // Trickle ICE の場合は、ICE candidateを相手に送る
-        //sendIceCandidate(evt.candidate);
+        sendIceCandidate(evt.candidate);
         // Vanilla ICE の場合には、何もしない
       } else {
         console.log('empty ice event');
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
-        sendSdp(peer.localDescription);
+        //sendSdp(peer.localDescription);
       }
     };
     // --- when need to exchange SDP ---
@@ -313,7 +313,7 @@
       console.log('setLocalDescription() success in promise');
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
-      //sendSdp(peerConnection.localDescription);
+      sendSdp(peerConnection.localDescription);
     }).catch(function(err) {
       console.error(err);
     });
