@@ -400,7 +400,6 @@
   function imageFunc() {
     // ファイルを取得
     file = $(this).prop('files')[0];
-    //file = inputFile.files[0];
     // 選択されたファイルが画像かどうか判定
     if (file.type != 'image/jpeg' && file.type != 'image/png') {
       // 画像でない場合は終了
@@ -410,7 +409,6 @@
       return;
     }
 
-    ////////////////////////////////////////////
     // 画像をリサイズする
     var image = new Image();
     var reader = new FileReader();
@@ -440,17 +438,6 @@
 
         // canvasからbase64画像データを取得
         var base64 = canvas.get(0).toDataURL('image/jpeg');        
-        //// base64からBlobデータを作成
-        //var barr, bin, i, len;
-        //bin = atob(base64.split('base64,')[1]);
-        //len = bin.length;
-        //barr = new Uint8Array(len);
-        //i = 0;
-        //while (i < len) {
-        //  barr[i] = bin.charCodeAt(i);
-        //  i++;
-        //}
-        //blob = new Blob([barr], {type: 'image/jpeg'});
         blob = makeBlob(base64);
         console.log(blob);
       }
@@ -458,7 +445,6 @@
     }
     // argument of readAsDataURL function is file OR blob
     reader.readAsDataURL(file);
-    ////////////////////////////////////////////
   }
 
   function drawImage(arg) {
@@ -493,20 +479,7 @@
 
         // canvasからbase64画像データを取得
         var base64 = canvas.get(0).toDataURL('image/jpeg');        
-        //////////////////////////////////////////
-        //// base64からBlobデータを作成
-        //var barr, bin, i, len;
-        //bin = atob(base64.split('base64,')[1]);
-        //len = bin.length;
-        //barr = new Uint8Array(len);
-        //i = 0;
-        //while (i < len) {
-        //  barr[i] = bin.charCodeAt(i);
-        //  i++;
-        //}
-        //blob = new Blob([barr], {type: 'image/jpeg'});
         blob = makeBlob(base64);
-        //////////////////////////////////////////
         console.log(blob);
       }
       image.src = e.target.result;
@@ -544,11 +517,9 @@
       var reader = new FileReader();
       reader.onload = function(e){
         base64 = e.target.result;
-        //let message = '{ "type": "treatment", "record": "' + posting + '"}';
         let message = '{ "type": "treatment", "record": "' + posting + '", "image": "' + base64 + '" }';
         console.log('sending content=' + posting);
         let totalContents = postedContents.value = postedContents.value + posting + '\n';
-        //localStorage.setItem('data', totalContents);
         storePosts(totalContents);
         ws.send(message);
         // 投稿完了したら入力欄の文字を消す
@@ -559,7 +530,6 @@
       let message = '{ "type": "treatment", "record": "' + posting + '", "image": "' + base64 + '" }';
       console.log('sending content=' + posting);
       let totalContents = postedContents.value = postedContents.value + posting + '\n';
-      //localStorage.setItem('data', totalContents);
       storePosts(totalContents);
       ws.send(message);
       // 投稿完了したら入力欄の文字を消す
@@ -569,14 +539,11 @@
 
   // 投稿を受信
   function addContents(message) {
-    //let contents = postedContents.value;
     let totalContents = postedContents.value = postedContents.value + message.record + '\n';
     let blob = message.image;
     if (blob) {
       drawImage(blob);
     }
-    //var data = localStorage.getItem('data');
-    //localStorage.setItem('data', totalContents);
     storePosts(totalContents);
   }
 
