@@ -487,11 +487,10 @@
   }
 
   /**
-   * desc
+   * base64からBlobデータを作成する。
    * @param {string} base64 BASE64 encoded strings.
    */
   function makeBlob(base64) {
-    // base64からBlobデータを作成
     var barr, bin, i, len;
     bin = atob(base64.split('base64,')[1]);
     len = bin.length;
