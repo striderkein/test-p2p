@@ -581,8 +581,10 @@
   }
 
   function clearLocalstorage() {
+    let msg = 'localstorage cleared.';
     localStorage.clear();
-    console.log('localstorage cleared.');
+    console.log(msg);
+    alert(msg);
   }
 
   // start PeerConnection
