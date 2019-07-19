@@ -17,7 +17,7 @@
   <button type="button" onclick="postContents();">Post</button>
   <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
   <button type="button" onclick="hangUp();">Hang Up</button> 
-  <input type="checkbox" name="use_vanilla" onclick="checked(this);" />use Vanilla
+  <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
   <!--
   <div>
     <video id="local_video" autoplay style="width: 160px; height: 120px; border: 1px solid black;"></video>
@@ -442,7 +442,7 @@
     return data;
   }
 
-  function checked(checkbox) {
+  function activateVanilla(checkbox) {
     useVanilla = checkbox.checked;
   }
   function test() {
