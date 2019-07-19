@@ -250,6 +250,7 @@
 
     dataChannel.onmessage = function(event) {
       console.log("received message: ", event.data);
+      //addContents(event.data);
     }
 
     dataChannel.onopen = function () {
@@ -569,34 +570,36 @@
       alert('投稿には文字または画像が必須です。');
       return;
     }
-    //if (blob) {
-    //  var reader = new FileReader();
-    //  reader.onload = function(e){
-    //    base64 = e.target.result;
-    //    let message = '{ "type": "treatment", "record": "' + posting + '", "image": "' + base64 + '" }';
-    //    console.log('sending content=' + posting);
-    //    let totalContents = postedContents.value = postedContents.value + posting + '\n';
-    //    storePosts(totalContents);
-    //    ws.send(message);
-    //    // 投稿完了したら入力欄の文字を消す
-    //    postingContents.value = '';
-    //  }
-    //  reader.readAsDataURL(blob);
-    //} else {
-    //  let message = '{ "type": "treatment", "record": "' + posting + '", "image": "' + base64 + '" }';
-    //  console.log('sending content=' + posting);
-    //  let totalContents = postedContents.value = postedContents.value + posting + '\n';
-    //  storePosts(totalContents);
-    //  ws.send(message);
-    //  // 投稿完了したら入力欄の文字を消す
-    //  postingContents.value = '';
-    //}
-    console.log('sending content=' + posting);
-    let totalContents = postedContents.value = postedContents.value + posting + '\n';
-    storePosts(totalContents);
-    remoteDataChannel.send(posting);
-    // 投稿完了したら入力欄の文字を消す
-    postingContents.value = '';
+    if (blob) {
+      var reader = new FileReader();
+      reader.onload = function(e){
+        base64 = e.target.result;
+        let message = '{ "type": "treatment", "record": "' + posting + '", "image": "' + base64 + '" }';
+        console.log('sending content=' + posting);
+        let totalContents = postedContents.value = postedContents.value + posting + '\n';
+        storePosts(totalContents);
+        ws.send(message);
+        // 投稿完了したら入力欄の文字を消す
+        postingContents.value = '';
+      }
+      reader.readAsDataURL(blob);
+    } else {
+      let message = '{ "type": "treatment", "record": "' + posting + '", "image": "' + base64 + '" }';
+      console.log('sending content=' + posting);
+      let totalContents = postedContents.value = postedContents.value + posting + '\n';
+      storePosts(totalContents);
+      ws.send(message);
+      // 投稿完了したら入力欄の文字を消す
+      postingContents.value = '';
+    }
+
+    // using data-channel
+    //console.log('sending content=' + posting);
+    //let totalContents = postedContents.value = postedContents.value + posting + '\n';
+    //storePosts(totalContents);
+    //remoteDataChannel.send(posting);
+    //// 投稿完了したら入力欄の文字を消す
+    //postingContents.value = '';
   }
 
   // 投稿を受信
