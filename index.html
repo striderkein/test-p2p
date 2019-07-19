@@ -17,6 +17,7 @@
   <button type="button" onclick="postContents();">Post</button>
   <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
   <button type="button" onclick="hangUp();">Hang Up</button> 
+  <input type="checkbox" name="use_vanilla" onclick="checked(this);" />use Vanilla
   <!--
   <div>
     <video id="local_video" autoplay style="width: 160px; height: 120px; border: 1px solid black;"></video>
@@ -50,6 +51,7 @@
 <script type="text/javascript">
   var file = null; // 選択されるファイル
   var blob = null; // 画像(BLOBデータ)
+  var useVanilla = false; // use Trickle ICE on default
   const THUMBNAIL_WIDTH = 500; // 画像リサイズ後の横の長さの最大値
   const THUMBNAIL_HEIGHT = 500; // 画像リサイズ後の縦の長さの最大値
   let thumnailCanvas = document.getElementById('canvas');
@@ -262,13 +264,17 @@
       if (evt.candidate) {
         console.log('candidate: ' + evt.candidate);
         // Trickle ICE の場合は、ICE candidateを相手に送る
-        sendIceCandidate(evt.candidate);
+        if (!useVanilla) {
+          sendIceCandidate(evt.candidate);
+        }
         // Vanilla ICE の場合には、何もしない
       } else {
         console.log('empty ice event');
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
-        //sendSdp(peer.localDescription);
+        if (useVanilla) {
+          sendSdp(peer.localDescription);
+        }
       }
     };
     // --- when need to exchange SDP ---
@@ -331,7 +337,9 @@
       console.log('setLocalDescription() success in promise');
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
-      sendSdp(peerConnection.localDescription);
+      if (!useVanilla) {
+        sendSdp(peerConnection.localDescription);
+      }
     }).catch(function(err) {
       console.error(err);
     });
@@ -366,7 +374,9 @@
       console.log('setLocalDescription() success in promise');
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
-      //sendSdp(peerConnection.localDescription);
+      if (!useVanilla) {
+        sendSdp(peerConnection.localDescription);
+      }
     }).catch(function(err) {
       console.error(err);
     });
@@ -411,6 +421,9 @@
     return data;
   }
 
+  function checked(checkbox) {
+    useVanilla = checkbox.checked;
+  }
   function test() {
     alert('change!');
   }
