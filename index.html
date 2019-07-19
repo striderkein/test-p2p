@@ -117,6 +117,16 @@
     }
   };
   
+  function addIceCandidate(candidate) {
+    if (peerConnection) {
+      peerConnection.addIceCandidate(candidate);
+    }
+    else {
+      console.error('PeerConnection not exist!');
+      return;
+    }
+  }
+
   // ---------------------- media handling ----------------------- 
   // start local video
   function startVideo() {
