@@ -524,6 +524,12 @@
 
   // 自分が投稿
   function postContents() {
+    // shutout over 3peer
+    if (! peerConnection) {
+      console.error('peerConnection NOT exist!');
+      alert('please post after connected.')
+      return;
+    }
     var base64 = '';
     let posting = postingContents.value;
     if (!posting && !blob) {
