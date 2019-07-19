@@ -59,6 +59,7 @@
   //let remoteVideo = document.getElementById('remote_video');
   let localStream = null;
   let dataChannel = null;
+  let remoteDataChannel = null;
   let peerConnection = null;
   let postedContents = document.getElementById('posted_contents');
   let postingContents = document.getElementById('posting_contents');
@@ -257,6 +258,10 @@
 
     dataChannel.onclose = function () {
       console.log('datachannel closed.');
+    }
+
+    peer.ondatachannel = function(event) {
+      remoteDataChannel = event.channel;
     }
 
     // --- on get remote stream ---
@@ -589,7 +594,7 @@
     console.log('sending content=' + posting);
     let totalContents = postedContents.value = postedContents.value + posting + '\n';
     storePosts(totalContents);
-    dataChannel.send(posting);
+    remoteDataChannel.send(posting);
     // 投稿完了したら入力欄の文字を消す
     postingContents.value = '';
   }
