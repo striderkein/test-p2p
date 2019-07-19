@@ -303,6 +303,14 @@
     return peer;
   }
 
+  function sendIceCandidate(candidate) {
+    console.log('---sending ICE candidate ---');
+    let obj = { type: 'candidate', ice: candidate };
+    let message = JSON.stringify(obj);
+    console.log('sending candidate=' + message);
+    ws.send(message);
+  }
+
   function makeOffer() {
     peerConnection = prepareNewConnection();
     peerConnection.createOffer()
