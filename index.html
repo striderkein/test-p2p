@@ -399,7 +399,7 @@
   }
 
   function init() {
-    inputFile.addEventListener('change', imageFunc, false);
+    inputFile.addEventListener('change', drawThumnail, false);
     // restore from localstorage.
     postedContents.value = restorePosts();
     console.log('data restored.');
@@ -431,7 +431,7 @@
     alert('change!');
   }
 
-  function imageFunc() {
+  function drawThumnail() {
     // ファイルを取得
     file = $(this).prop('files')[0];
     // 選択されたファイルが画像かどうか判定
