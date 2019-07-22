@@ -2,28 +2,15 @@
 <html>
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
- <!--<title>WebSocket Signaling 1to1</title>-->
  <title>NINKATSU</title>
 </head>
 <body onload="init()">
-  <!-- WebSocket Signaling 1to1 (vanilla ICE)<br /> -->
   NINKATSU<br />
-  <!--
-  <button type="button" onclick="startVideo();">Start Video</button>
-  <button type="button" onclick="stopVideo();">Stop Video</button>
-  -->
-  &nbsp;
   <button type="button" onclick="connect();">Connect</button>
   <button type="button" onclick="postContents();">Post</button>
   <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
   <button type="button" onclick="hangUp();">Hang Up</button> 
   <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
-  <!--
-  <div>
-    <video id="local_video" autoplay style="width: 160px; height: 120px; border: 1px solid black;"></video>
-    <video id="remote_video" autoplay style="width: 160px; height: 120px; border: 1px solid black;"></video>
-  </div>
-  -->
   <div>
     <textarea id="posted_contents" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
     <textarea id="posting_contents" style="width: 480px; height: 30px; border: 1px solid black;"></textarea>
@@ -40,9 +27,6 @@
     <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly">SDP to send</textarea>
   </p>
   <p>SDP received:&nbsp;
-    <!--
-    <button type="button" onclick="onSdpText();">Receive remote SDP</button>
-    -->
     <br />
     <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
   </p>
@@ -55,8 +39,6 @@
   const THUMBNAIL_WIDTH = 500; // 画像リサイズ後の横の長さの最大値
   const THUMBNAIL_HEIGHT = 500; // 画像リサイズ後の縦の長さの最大値
   let thumnailCanvas = document.getElementById('canvas');
-  //let localVideo = document.getElementById('local_video');
-  //let remoteVideo = document.getElementById('remote_video');
   let localStream = null;
   let dataChannel = null;
   let remoteDataChannel = null;
