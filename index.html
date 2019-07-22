@@ -404,7 +404,7 @@
   }
 
   function init() {
-    inputFile.addEventListener('change', drawThumnail, false);
+    inputFile.addEventListener('change', drawImage, false);
     // restore from localstorage.
     postedContents.value = restorePosts();
     console.log('data restored.');
@@ -436,18 +436,12 @@
     alert('change!');
   }
 
-  function drawThumnail() {
-    // ファイルを取得
-    file = $(this).prop('files')[0];
-    // 選択されたファイルが画像かどうか判定
-    if (file.type != 'image/jpeg' && file.type != 'image/png') {
-      // 画像でない場合は終了
-      file = null;
-      blob = null;
-      console.log('uploaded file is not a image.');
-      return;
-    }
+  function guessImageMime(data){
+    let result = /data:([A-Za-z\/.]+)/.exec(data)[1];
+    return result;
+  }
 
+  function drawThumnail() {
     // 画像をリサイズする
     var image = new Image();
     var reader = new FileReader();
@@ -476,8 +470,8 @@
         ctx.drawImage(image,0,0,image.width,image.height,0,0,width,height);
 
         // canvasからbase64画像データを取得
-        var base64 = canvas.get(0).toDataURL('image/jpeg');        
-        blob = makeBlob(base64);
+        var base64 = canvas.get(0).toDataURL(file.type);
+        blob = makeBlob(base64, file.type);
         console.log(blob);
       }
       image.src = e.target.result;
@@ -486,50 +480,30 @@
     reader.readAsDataURL(file);
   }
 
-  function drawImage(arg) {
-    // 画像をリサイズする
-    var image = new Image();
-    var reader = new FileReader();
-    blob = makeBlob(arg);
-    reader.readAsDataURL(blob);
-    reader.onload = function(e) {
-      image.onload = function() {
-        var width, height;
-        if(image.width > image.height){
-          // 横長の画像は横のサイズを指定値にあわせる
-          var ratio = image.height/image.width;
-          width = THUMBNAIL_WIDTH;
-          height = THUMBNAIL_WIDTH * ratio;
-        } else {
-          // 縦長の画像は縦のサイズを指定値にあわせる
-          var ratio = image.width/image.height;
-          width = THUMBNAIL_HEIGHT * ratio;
-          height = THUMBNAIL_HEIGHT;
-        }
-        // サムネ描画用canvasのサイズを上で算出した値に変更
-        var canvas = $('#canvas')
-                     .attr('width', width)
-                     .attr('height', height);
-        var ctx = canvas[0].getContext('2d');
-        // canvasに既に描画されている画像をクリア
-        ctx.clearRect(0,0,width,height);
-        // canvasにサムネイルを描画
-        ctx.drawImage(image,0,0,image.width,image.height,0,0,width,height);
-
-        // canvasからbase64画像データを取得
-        var base64 = canvas.get(0).toDataURL('image/jpeg');        
-        blob = makeBlob(base64);
-        console.log(blob);
+  function drawImage(arg, type) {
+    if (arg && type) {
+      file = blobToFile(makeBlob(arg), 'received_image');
+    } else {
+      // ファイルを取得
+      file = $(this).prop('files')[0];
+      // 選択されたファイルが画像かどうか判定
+      if (file.type != 'imag/jpeg' && file.type != 'image/png') {
+        // 画像でない場合は終了
+        file = null;
+        blob = null;
+        console.log('uploaded file is not a image.');
+        return;
       }
-      image.src = e.target.result;
     }
+    drawThumnail();
   }
 
   /**
    * base64からBlobデータを作成する。
    * @param {string} base64 BASE64 encoded strings.
+   * @param {string} type image MIME strings.
    */
-  function makeBlob(base64) {
+  function makeBlob(base64, type) {
     var barr, bin, i, len;
     bin = atob(base64.split('base64,')[1]);
     len = bin.length;
@@ -539,12 +513,20 @@
       barr[i] = bin.charCodeAt(i);
       i++;
     }
-    blob = new Blob([barr], {type: 'image/jpeg'});
+    blob = new Blob([barr], {type: type});
     return blob;
+  }
+
+  function blobToFile(theBlob, fileName){
+    //A Blob() is almost a File() - it's just missing the two properties below which we will add
+    theBlob.lastModifiedDate = new Date();
+    theBlob.name = fileName;
+    return theBlob;
   }
 
   // 自分が投稿
   function postContents() {
+    let data = [];
     // shutout over 3peer
     if (! peerConnection) {
       console.error('peerConnection NOT exist!');
@@ -579,22 +561,17 @@
       // 投稿完了したら入力欄の文字を消す
       postingContents.value = '';
     }
-
-    // using data-channel
-    //console.log('sending content=' + posting);
-    //let totalContents = postedContents.value = postedContents.value + posting + '\n';
-    //storePosts(totalContents);
-    //remoteDataChannel.send(posting);
-    //// 投稿完了したら入力欄の文字を消す
-    //postingContents.value = '';
   }
 
   // 投稿を受信
-  function addContents(message) {
-    let totalContents = postedContents.value = postedContents.value + message.record + '\n';
-    let blob = message.image;
+  function addContents(data) {
+    //let totalContents = postedContents.value = postedContents.value + message.record + '\n';
+    //let record = JSON.stringify(data);
+    let totalContents = postedContents.value = postedContents.value + data.record + '\n';
+    let blob = data.image;
+    let type = data.image_type;
     if (blob) {
-      drawImage(blob);
+      drawImage(blob, type);
     }
     storePosts(totalContents);
   }
