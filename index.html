@@ -40,8 +40,8 @@
   const THUMBNAIL_HEIGHT = 500; // 画像リサイズ後の縦の長さの最大値
   let thumnailCanvas = document.getElementById('canvas');
   let localStream = null;
-  let dataChannel = null;
-  let remoteDataChannel = null;
+  let dataChannel = null; // 自分のデータチャンネル
+  let remoteDataChannel = null; // 送信先のデータチャンネル
   let peerConnection = null;
   let postedContents = document.getElementById('posted_contents');
   let postingContents = document.getElementById('posting_contents');
