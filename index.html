@@ -231,7 +231,11 @@
       {"urls":"turn:" + turnUrl + ":80?transport=tcp", "username":"user", "credential":"password"}
     ]};
     let peer = new RTCPeerConnection(pc_config);
-    dataChannel = peer.createDataChannel("myDataChannel");
+    let dataChannelOptions = {
+      ordered: true, // 順序を保証する
+      maxRetransmitTime: 3000, // ミリ秒
+    };
+    dataChannel = peer.createDataChannel("myDataChannel", dataChannelOptions);
 
     dataChannel.onmessage = function(event) {
       console.log("received message: ", event.data);
