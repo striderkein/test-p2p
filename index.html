@@ -213,6 +213,9 @@
     ws.send(message);
   }
   // ---------------------- connection handling -----------------------
+  /**
+   * @return {RTCPeerConection} peer RTCPeerConnection object
+   */
   function prepareNewConnection() {
     /*
     let pc_config = {"iceServers":[
@@ -331,6 +334,7 @@
   }
 
   function makeOffer() {
+    // RTCPeerConnection オブジェクトを生成
     peerConnection = prepareNewConnection();
     peerConnection.createOffer()
     .then(function (sessionDescription) {
@@ -352,6 +356,7 @@
     if (peerConnection) {
       console.error('peerConnection alreay exist!');
     }
+    // RTCPeerConnection オブジェクトを生成
     peerConnection = prepareNewConnection();
     peerConnection.setRemoteDescription(sessionDescription)
     .then(function() {
