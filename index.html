@@ -40,8 +40,7 @@
   const THUMBNAIL_HEIGHT = 500; // 画像リサイズ後の縦の長さの最大値
   let thumnailCanvas = document.getElementById('canvas');
   let localStream = null;
-  let dataChannel = null; // 自分のデータチャンネル
-  let remoteDataChannel = null; // 送信先のデータチャンネル
+  let dataChannel = null;
   let peerConnection = null;
   let postedContents = document.getElementById('posted_contents');
   let postingContents = document.getElementById('posting_contents');
@@ -91,15 +90,8 @@
       console.log(candidate);
       addIceCandidate(candidate);
     }
-    else if (message.type === 'treatment') {
-      // --- got 治療記録 ---
-      console.log('Received Treatment record ...');
-      let treatmentRecord = message.record;
-      let receivedImage = message.image;
-      console.log('new record: ' + treatmentRecord);
-      // 「記録一覧画面（？）」に追加
-      //addContents(treatmentRecord);
-      addContents(message);
+    else {
+      console.error('unknown message-type!');
     }
   };
   
@@ -231,15 +223,34 @@
       {"urls":"turn:" + turnUrl + ":80?transport=tcp", "username":"user", "credential":"password"}
     ]};
     let peer = new RTCPeerConnection(pc_config);
+
+    // create DataChannel
+    /**********************************************************************************
+     * NOTE:
+     * The DataChannel needs to be loaded in SDP, 
+     * and it must be created before sending offer with createOffer.
+     * otherwise, it will not be included in SDP, and the connection will not open forever.
+     **********************************************************************************
+     */
     let dataChannelOptions = {
       ordered: true, // 順序を保証する
-      maxRetransmitTime: 3000, // ミリ秒
+      //maxRetransmitTime: 3000, // ミリ秒 -> deprecated
     };
     dataChannel = peer.createDataChannel("myDataChannel", dataChannelOptions);
 
     dataChannel.onmessage = function(event) {
-      console.log("received message: ", event.data);
-      //addContents(event.data);
+      // --- got 治療記録 ---
+      console.log('Received Medical record ...');
+      let data = JSON.parse(event.data);
+      let medicalRecord = data.record;
+      let receivedImage = data.image;
+      console.log('new record: ' + medicalRecord);
+      // 「記録一覧画面（？）」に追加
+      addContents(data);
+    }
+
+    dataChannel.onerror = function (error) {
+      console.log('datachannel Error.', error);
     }
 
     dataChannel.onopen = function () {
@@ -250,8 +261,10 @@
       console.log('datachannel closed.');
     }
 
+    // NOTE: DataChannel has no distinction between local and remote.
     peer.ondatachannel = function(event) {
-      remoteDataChannel = event.channel;
+      console.log('remoteDatachannel added.');
+      dataChannel = event.channel;
     }
 
     // --- on get remote stream ---
@@ -547,21 +560,28 @@
       var reader = new FileReader();
       reader.onload = function(e){
         base64 = e.target.result;
-        let message = '{ "type": "treatment", "record": "' + posting + '", "image": "' + base64 + '" }';
+        let imageType = guessImageMime(base64);
+        let message = '{ "type": "medical", "record": "' + posting + '", "image": "' + base64 + '", "image_type": "' + imageType + '" }';
         console.log('sending content=' + posting);
         let totalContents = postedContents.value = postedContents.value + posting + '\n';
         storePosts(totalContents);
-        ws.send(message);
+        dataChannel.send(message);
         // 投稿完了したら入力欄の文字を消す
         postingContents.value = '';
       }
       reader.readAsDataURL(blob);
-    } else {
-      let message = '{ "type": "treatment", "record": "' + posting + '", "image": "' + base64 + '" }';
+   } else {
+      // using data-channel
+      let message = '{ "record": "' + posting + '", "image": "' + base64 + '" }';
       console.log('sending content=' + posting);
       let totalContents = postedContents.value = postedContents.value + posting + '\n';
       storePosts(totalContents);
-      ws.send(message);
+      // Unsupported Error!
+      //let data = new Blob([posting], {type: 'text/plain'});
+      //data.forEach((d) => {
+      //  dataChannel.send(d);
+      //})
+      dataChannel.send(message);
       // 投稿完了したら入力欄の文字を消す
       postingContents.value = '';
     }
