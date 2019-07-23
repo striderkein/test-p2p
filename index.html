@@ -583,8 +583,6 @@
 
   // 投稿を受信
   function addContents(data) {
-    //let totalContents = postedContents.value = postedContents.value + message.record + '\n';
-    //let record = JSON.stringify(data);
     let totalContents = postedContents.value = postedContents.value + data.record + '\n';
     let blob = data.image;
     let type = data.image_type;
