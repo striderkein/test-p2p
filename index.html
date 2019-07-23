@@ -107,91 +107,91 @@
 
   // ---------------------- media handling ----------------------- 
   // start local video
-  function startVideo() {
-    getDeviceStream({video: true, audio: true})
-    .then(function (stream) { // success
-      localStream = stream;
-      //playVideo(localVideo, stream);
-    }).catch(function (error) { // error
-      console.error('getUserMedia error:', error);
-      return;
-    });
-  }
-  // stop local video
-  function stopVideo() {
-    pauseVideo(localVideo);
-    stopLocalStream(localStream);
-  }
-  function stopLocalStream(stream) {
-    let tracks = stream.getTracks();
-    if (! tracks) {
-      console.warn('NO tracks');
-      return;
-    }
-    
-    for (let track of tracks) {
-      track.stop();
-    }
-  }
+  //function startVideo() {
+  //  getDeviceStream({video: true, audio: true})
+  //  .then(function (stream) { // success
+  //    localStream = stream;
+  //    //playVideo(localVideo, stream);
+  //  }).catch(function (error) { // error
+  //    console.error('getUserMedia error:', error);
+  //    return;
+  //  });
+  //}
+  //// stop local video
+  //function stopVideo() {
+  //  pauseVideo(localVideo);
+  //  stopLocalStream(localStream);
+  //}
+  //function stopLocalStream(stream) {
+  //  let tracks = stream.getTracks();
+  //  if (! tracks) {
+  //    console.warn('NO tracks');
+  //    return;
+  //  }
+  //  
+  //  for (let track of tracks) {
+  //    track.stop();
+  //  }
+  //}
   
-  function getDeviceStream(option) {
-    if ('getUserMedia' in navigator.mediaDevices) {
-      console.log('navigator.mediaDevices.getUserMadia');
-      return navigator.mediaDevices.getUserMedia(option);
-    }
-    else {
-      console.log('wrap navigator.getUserMadia with Promise');
-      return new Promise(function(resolve, reject){    
-        navigator.getUserMedia(option,
-          resolve,
-          reject
-        );
-      });      
-    }
-  }
-  function playVideo(element, stream) {
-    if ('srcObject' in element) {
-      element.srcObject = stream;
-    }
-    else {
-      element.src = window.URL.createObjectURL(stream);
-    }
-    element.play();
-    element.volume = 0;
-  }
-  function pauseVideo(element) {
-    element.pause();
-    if ('srcObject' in element) {
-      element.srcObject = null;
-    }
-    else {
-      if (element.src && (element.src !== '') ) {
-        window.URL.revokeObjectURL(element.src);
-      }
-      element.src = '';
-    }
-  }
-  // ----- hand signaling ----
-  function onSdpText() {
-    let text = textToReceiveSdp.value;
-    if (peerConnection) {
-      console.log('Received answer text...');
-      let answer = new RTCSessionDescription({
-        type : 'answer',
-        sdp : text,
-      });
-      setAnswer(answer);
-    }
-    else {
-      console.log('Received offer text...');
-      let offer = new RTCSessionDescription({
-        type : 'offer',
-        sdp : text,
-      });
-      setOffer(offer);
-    }
-    textToReceiveSdp.value ='';
-  }
+  //function getDeviceStream(option) {
+  //  if ('getUserMedia' in navigator.mediaDevices) {
+  //    console.log('navigator.mediaDevices.getUserMadia');
+  //    return navigator.mediaDevices.getUserMedia(option);
+  //  }
+  //  else {
+  //    console.log('wrap navigator.getUserMadia with Promise');
+  //    return new Promise(function(resolve, reject){    
+  //      navigator.getUserMedia(option,
+  //        resolve,
+  //        reject
+  //      );
+  //    });      
+  //  }
+  //}
+  //function playVideo(element, stream) {
+  //  if ('srcObject' in element) {
+  //    element.srcObject = stream;
+  //  }
+  //  else {
+  //    element.src = window.URL.createObjectURL(stream);
+  //  }
+  //  element.play();
+  //  element.volume = 0;
+  //}
+  //function pauseVideo(element) {
+  //  element.pause();
+  //  if ('srcObject' in element) {
+  //    element.srcObject = null;
+  //  }
+  //  else {
+  //    if (element.src && (element.src !== '') ) {
+  //      window.URL.revokeObjectURL(element.src);
+  //    }
+  //    element.src = '';
+  //  }
+  //}
+  //// ----- hand signaling ----
+  //function onSdpText() {
+  //  let text = textToReceiveSdp.value;
+  //  if (peerConnection) {
+  //    console.log('Received answer text...');
+  //    let answer = new RTCSessionDescription({
+  //      type : 'answer',
+  //      sdp : text,
+  //    });
+  //    setAnswer(answer);
+  //  }
+  //  else {
+  //    console.log('Received offer text...');
+  //    let offer = new RTCSessionDescription({
+  //      type : 'offer',
+  //      sdp : text,
+  //    });
+  //    setOffer(offer);
+  //  }
+  //  textToReceiveSdp.value ='';
+  //}
  
   function sendSdp(sessionDescription) {
     console.log('---sending sdp ---');
@@ -426,7 +426,7 @@
     postedContents.value = restorePosts();
     console.log('data restored.');
     // need to get localstream
-    startVideo();
+    //startVideo();
   }
 
   /**
