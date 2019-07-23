@@ -2,28 +2,15 @@
 <html>
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
- <!--<title>WebSocket Signaling 1to1</title>-->
  <title>NINKATSU</title>
 </head>
 <body onload="init()">
-  <!-- WebSocket Signaling 1to1 (vanilla ICE)<br /> -->
   NINKATSU<br />
-  <!--
-  <button type="button" onclick="startVideo();">Start Video</button>
-  <button type="button" onclick="stopVideo();">Stop Video</button>
-  -->
-  &nbsp;
   <button type="button" onclick="connect();">Connect</button>
   <button type="button" onclick="postContents();">Post</button>
   <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
   <button type="button" onclick="hangUp();">Hang Up</button> 
   <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
-  <!--
-  <div>
-    <video id="local_video" autoplay style="width: 160px; height: 120px; border: 1px solid black;"></video>
-    <video id="remote_video" autoplay style="width: 160px; height: 120px; border: 1px solid black;"></video>
-  </div>
-  -->
   <div>
     <textarea id="posted_contents" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
     <textarea id="posting_contents" style="width: 480px; height: 30px; border: 1px solid black;"></textarea>
@@ -40,9 +27,6 @@
     <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly">SDP to send</textarea>
   </p>
   <p>SDP received:&nbsp;
-    <!--
-    <button type="button" onclick="onSdpText();">Receive remote SDP</button>
-    -->
     <br />
     <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
   </p>
@@ -55,11 +39,8 @@
   const THUMBNAIL_WIDTH = 500; // 画像リサイズ後の横の長さの最大値
   const THUMBNAIL_HEIGHT = 500; // 画像リサイズ後の縦の長さの最大値
   let thumnailCanvas = document.getElementById('canvas');
-  //let localVideo = document.getElementById('local_video');
-  //let remoteVideo = document.getElementById('remote_video');
   let localStream = null;
   let dataChannel = null;
-  let remoteDataChannel = null;
   let peerConnection = null;
   let postedContents = document.getElementById('posted_contents');
   let postingContents = document.getElementById('posting_contents');
@@ -109,15 +90,8 @@
       console.log(candidate);
       addIceCandidate(candidate);
     }
-    else if (message.type === 'treatment') {
-      // --- got 治療記録 ---
-      console.log('Received Treatment record ...');
-      let treatmentRecord = message.record;
-      let receivedImage = message.image;
-      console.log('new record: ' + treatmentRecord);
-      // 「記録一覧画面（？）」に追加
-      //addContents(treatmentRecord);
-      addContents(message);
+    else {
+      console.error('unknown message-type!');
     }
   };
   
@@ -133,91 +107,91 @@
 
   // ---------------------- media handling ----------------------- 
   // start local video
-  function startVideo() {
-    getDeviceStream({video: true, audio: true})
-    .then(function (stream) { // success
-      localStream = stream;
-      //playVideo(localVideo, stream);
-    }).catch(function (error) { // error
-      console.error('getUserMedia error:', error);
-      return;
-    });
-  }
-  // stop local video
-  function stopVideo() {
-    pauseVideo(localVideo);
-    stopLocalStream(localStream);
-  }
-  function stopLocalStream(stream) {
-    let tracks = stream.getTracks();
-    if (! tracks) {
-      console.warn('NO tracks');
-      return;
-    }
-    
-    for (let track of tracks) {
-      track.stop();
-    }
-  }
+  //function startVideo() {
+  //  getDeviceStream({video: true, audio: true})
+  //  .then(function (stream) { // success
+  //    localStream = stream;
+  //    //playVideo(localVideo, stream);
+  //  }).catch(function (error) { // error
+  //    console.error('getUserMedia error:', error);
+  //    return;
+  //  });
+  //}
+  //// stop local video
+  //function stopVideo() {
+  //  pauseVideo(localVideo);
+  //  stopLocalStream(localStream);
+  //}
+  //function stopLocalStream(stream) {
+  //  let tracks = stream.getTracks();
+  //  if (! tracks) {
+  //    console.warn('NO tracks');
+  //    return;
+  //  }
+  //  
+  //  for (let track of tracks) {
+  //    track.stop();
+  //  }
+  //}
   
-  function getDeviceStream(option) {
-    if ('getUserMedia' in navigator.mediaDevices) {
-      console.log('navigator.mediaDevices.getUserMadia');
-      return navigator.mediaDevices.getUserMedia(option);
-    }
-    else {
-      console.log('wrap navigator.getUserMadia with Promise');
-      return new Promise(function(resolve, reject){    
-        navigator.getUserMedia(option,
-          resolve,
-          reject
-        );
-      });      
-    }
-  }
-  function playVideo(element, stream) {
-    if ('srcObject' in element) {
-      element.srcObject = stream;
-    }
-    else {
-      element.src = window.URL.createObjectURL(stream);
-    }
-    element.play();
-    element.volume = 0;
-  }
-  function pauseVideo(element) {
-    element.pause();
-    if ('srcObject' in element) {
-      element.srcObject = null;
-    }
-    else {
-      if (element.src && (element.src !== '') ) {
-        window.URL.revokeObjectURL(element.src);
-      }
-      element.src = '';
-    }
-  }
-  // ----- hand signaling ----
-  function onSdpText() {
-    let text = textToReceiveSdp.value;
-    if (peerConnection) {
-      console.log('Received answer text...');
-      let answer = new RTCSessionDescription({
-        type : 'answer',
-        sdp : text,
-      });
-      setAnswer(answer);
-    }
-    else {
-      console.log('Received offer text...');
-      let offer = new RTCSessionDescription({
-        type : 'offer',
-        sdp : text,
-      });
-      setOffer(offer);
-    }
-    textToReceiveSdp.value ='';
-  }
+  //function getDeviceStream(option) {
+  //  if ('getUserMedia' in navigator.mediaDevices) {
+  //    console.log('navigator.mediaDevices.getUserMadia');
+  //    return navigator.mediaDevices.getUserMedia(option);
+  //  }
+  //  else {
+  //    console.log('wrap navigator.getUserMadia with Promise');
+  //    return new Promise(function(resolve, reject){    
+  //      navigator.getUserMedia(option,
+  //        resolve,
+  //        reject
+  //      );
+  //    });      
+  //  }
+  //}
+  //function playVideo(element, stream) {
+  //  if ('srcObject' in element) {
+  //    element.srcObject = stream;
+  //  }
+  //  else {
+  //    element.src = window.URL.createObjectURL(stream);
+  //  }
+  //  element.play();
+  //  element.volume = 0;
+  //}
+  //function pauseVideo(element) {
+  //  element.pause();
+  //  if ('srcObject' in element) {
+  //    element.srcObject = null;
+  //  }
+  //  else {
+  //    if (element.src && (element.src !== '') ) {
+  //      window.URL.revokeObjectURL(element.src);
+  //    }
+  //    element.src = '';
+  //  }
+  //}
+  //// ----- hand signaling ----
+  //function onSdpText() {
+  //  let text = textToReceiveSdp.value;
+  //  if (peerConnection) {
+  //    console.log('Received answer text...');
+  //    let answer = new RTCSessionDescription({
+  //      type : 'answer',
+  //      sdp : text,
+  //    });
+  //    setAnswer(answer);
+  //  }
+  //  else {
+  //    console.log('Received offer text...');
+  //    let offer = new RTCSessionDescription({
+  //      type : 'offer',
+  //      sdp : text,
+  //    });
+  //    setOffer(offer);
+  //  }
+  //  textToReceiveSdp.value ='';
+  //}
  
   function sendSdp(sessionDescription) {
     console.log('---sending sdp ---');
@@ -231,6 +205,9 @@
     ws.send(message);
   }
   // ---------------------- connection handling -----------------------
+  /**
+   * @return {RTCPeerConection} peer RTCPeerConnection object
+   */
   function prepareNewConnection() {
     /*
     let pc_config = {"iceServers":[
@@ -246,11 +223,34 @@
       {"urls":"turn:" + turnUrl + ":80?transport=tcp", "username":"user", "credential":"password"}
     ]};
     let peer = new RTCPeerConnection(pc_config);
-    dataChannel = peer.createDataChannel("myDataChannel");
+
+    // create DataChannel
+    /**********************************************************************************
+     * NOTE:
+     * The DataChannel needs to be loaded in SDP, 
+     * and it must be created before sending offer with createOffer.
+     * otherwise, it will not be included in SDP, and the connection will not open forever.
+     **********************************************************************************
+     */
+    let dataChannelOptions = {
+      ordered: true, // 順序を保証する
+      //maxRetransmitTime: 3000, // ミリ秒 -> deprecated
+    };
+    dataChannel = peer.createDataChannel("myDataChannel", dataChannelOptions);
 
     dataChannel.onmessage = function(event) {
-      console.log("received message: ", event.data);
-      //addContents(event.data);
+      // --- got 治療記録 ---
+      console.log('Received Medical record ...');
+      let data = JSON.parse(event.data);
+      let medicalRecord = data.record;
+      let receivedImage = data.image;
+      console.log('new record: ' + medicalRecord);
+      // 「記録一覧画面（？）」に追加
+      addContents(data);
+    }
+
+    dataChannel.onerror = function (error) {
+      console.log('datachannel Error.', error);
     }
 
     dataChannel.onopen = function () {
@@ -261,8 +261,10 @@
       console.log('datachannel closed.');
     }
 
+    // NOTE: DataChannel has no distinction between local and remote.
     peer.ondatachannel = function(event) {
-      remoteDataChannel = event.channel;
+      console.log('remoteDatachannel added.');
+      dataChannel = event.channel;
     }
 
     // --- on get remote stream ---
@@ -349,6 +351,7 @@
   }
 
   function makeOffer() {
+    // RTCPeerConnection オブジェクトを生成
     peerConnection = prepareNewConnection();
     peerConnection.createOffer()
     .then(function (sessionDescription) {
@@ -370,6 +373,7 @@
     if (peerConnection) {
       console.error('peerConnection alreay exist!');
     }
+    // RTCPeerConnection オブジェクトを生成
     peerConnection = prepareNewConnection();
     peerConnection.setRemoteDescription(sessionDescription)
     .then(function() {
@@ -417,12 +421,12 @@
   }
 
   function init() {
-    inputFile.addEventListener('change', imageFunc, false);
+    inputFile.addEventListener('change', drawImage, false);
     // restore from localstorage.
     postedContents.value = restorePosts();
     console.log('data restored.');
     // need to get localstream
-    startVideo();
+    //startVideo();
   }
 
   /**
@@ -449,18 +453,12 @@
     alert('change!');
   }
 
-  function imageFunc() {
-    // ファイルを取得
-    file = $(this).prop('files')[0];
-    // 選択されたファイルが画像かどうか判定
-    if (file.type != 'image/jpeg' && file.type != 'image/png') {
-      // 画像でない場合は終了
-      file = null;
-      blob = null;
-      console.log('uploaded file is not a image.');
-      return;
-    }
+  function guessImageMime(data){
+    let result = /data:([A-Za-z\/.]+)/.exec(data)[1];
+    return result;
+  }
 
+  function drawThumnail() {
     // 画像をリサイズする
     var image = new Image();
     var reader = new FileReader();
@@ -489,8 +487,8 @@
         ctx.drawImage(image,0,0,image.width,image.height,0,0,width,height);
 
         // canvasからbase64画像データを取得
-        var base64 = canvas.get(0).toDataURL('image/jpeg');        
-        blob = makeBlob(base64);
+        var base64 = canvas.get(0).toDataURL(file.type);
+        blob = makeBlob(base64, file.type);
         console.log(blob);
       }
       image.src = e.target.result;
@@ -499,50 +497,30 @@
     reader.readAsDataURL(file);
   }
 
-  function drawImage(arg) {
-    // 画像をリサイズする
-    var image = new Image();
-    var reader = new FileReader();
-    blob = makeBlob(arg);
-    reader.readAsDataURL(blob);
-    reader.onload = function(e) {
-      image.onload = function() {
-        var width, height;
-        if(image.width > image.height){
-          // 横長の画像は横のサイズを指定値にあわせる
-          var ratio = image.height/image.width;
-          width = THUMBNAIL_WIDTH;
-          height = THUMBNAIL_WIDTH * ratio;
-        } else {
-          // 縦長の画像は縦のサイズを指定値にあわせる
-          var ratio = image.width/image.height;
-          width = THUMBNAIL_HEIGHT * ratio;
-          height = THUMBNAIL_HEIGHT;
-        }
-        // サムネ描画用canvasのサイズを上で算出した値に変更
-        var canvas = $('#canvas')
-                     .attr('width', width)
-                     .attr('height', height);
-        var ctx = canvas[0].getContext('2d');
-        // canvasに既に描画されている画像をクリア
-        ctx.clearRect(0,0,width,height);
-        // canvasにサムネイルを描画
-        ctx.drawImage(image,0,0,image.width,image.height,0,0,width,height);
-
-        // canvasからbase64画像データを取得
-        var base64 = canvas.get(0).toDataURL('image/jpeg');        
-        blob = makeBlob(base64);
-        console.log(blob);
+  function drawImage(arg, type) {
+    if (arg && type) {
+      file = blobToFile(makeBlob(arg), 'received_image');
+    } else {
+      // ファイルを取得
+      file = $(this).prop('files')[0];
+      // 選択されたファイルが画像かどうか判定
+      if (file.type != 'imag/jpeg' && file.type != 'image/png') {
+        // 画像でない場合は終了
+        file = null;
+        blob = null;
+        console.log('uploaded file is not a image.');
+        return;
       }
-      image.src = e.target.result;
     }
+    drawThumnail();
   }
 
   /**
    * base64からBlobデータを作成する。
    * @param {string} base64 BASE64 encoded strings.
+   * @param {string} type image MIME strings.
    */
-  function makeBlob(base64) {
+  function makeBlob(base64, type) {
     var barr, bin, i, len;
     bin = atob(base64.split('base64,')[1]);
     len = bin.length;
@@ -552,19 +530,26 @@
       barr[i] = bin.charCodeAt(i);
       i++;
     }
-    blob = new Blob([barr], {type: 'image/jpeg'});
+    blob = new Blob([barr], {type: type});
     return blob;
+  }
+
+  function blobToFile(theBlob, fileName){
+    //A Blob() is almost a File() - it's just missing the two properties below which we will add
+    theBlob.lastModifiedDate = new Date();
+    theBlob.name = fileName;
+    return theBlob;
   }
 
   // 自分が投稿
   function postContents() {
+    let data = [];
     // shutout over 3peer
     if (! peerConnection) {
       console.error('peerConnection NOT exist!');
       alert('please post after connected.')
       return;
     }
-    var base64 = '';
     let posting = postingContents.value;
     if (!posting && !blob) {
       alert('投稿には文字または画像が必須です。');
@@ -573,41 +558,36 @@
     if (blob) {
       var reader = new FileReader();
       reader.onload = function(e){
-        base64 = e.target.result;
-        let message = '{ "type": "treatment", "record": "' + posting + '", "image": "' + base64 + '" }';
-        console.log('sending content=' + posting);
-        let totalContents = postedContents.value = postedContents.value + posting + '\n';
-        storePosts(totalContents);
-        ws.send(message);
-        // 投稿完了したら入力欄の文字を消す
-        postingContents.value = '';
+        doPost(posting, e.target.result);
       }
       reader.readAsDataURL(blob);
-    } else {
-      let message = '{ "type": "treatment", "record": "' + posting + '", "image": "' + base64 + '" }';
-      console.log('sending content=' + posting);
-      let totalContents = postedContents.value = postedContents.value + posting + '\n';
-      storePosts(totalContents);
-      ws.send(message);
-      // 投稿完了したら入力欄の文字を消す
-      postingContents.value = '';
+   } else {
+      doPost(posting, '');
     }
+  }
 
-    // using data-channel
-    //console.log('sending content=' + posting);
-    //let totalContents = postedContents.value = postedContents.value + posting + '\n';
-    //storePosts(totalContents);
-    //remoteDataChannel.send(posting);
-    //// 投稿完了したら入力欄の文字を消す
-    //postingContents.value = '';
+  /**
+   * @param {string} posting contents of post(medical record).
+   * @param {string} base64 BASE64 encoded strings.
+   */
+  function doPost(posting, base64) {
+    let imageType = base64 ? guessImageMime(base64) : '';
+    let message = '{ "record": "' + posting + '", "image": "' + base64 + '", "image_type": "' + imageType + '" }';
+    console.log('sending content=' + posting);
+    let totalContents = postedContents.value = postedContents.value + posting + '\n';
+    storePosts(totalContents);
+    dataChannel.send(message);
+    // 投稿完了したら入力欄の文字を消す
+    postingContents.value = '';
   }
 
   // 投稿を受信
-  function addContents(message) {
-    let totalContents = postedContents.value = postedContents.value + message.record + '\n';
-    let blob = message.image;
+  function addContents(data) {
+    let totalContents = postedContents.value = postedContents.value + data.record + '\n';
+    let blob = data.image;
+    let type = data.image_type;
     if (blob) {
-      drawImage(blob);
+      drawImage(blob, type);
     }
     storePosts(totalContents);
   }
