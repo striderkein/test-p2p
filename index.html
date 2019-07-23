@@ -550,7 +550,6 @@
       alert('please post after connected.')
       return;
     }
-    var base64 = '';
     let posting = postingContents.value;
     if (!posting && !blob) {
       alert('投稿には文字または画像が必須です。');
@@ -559,32 +558,27 @@
     if (blob) {
       var reader = new FileReader();
       reader.onload = function(e){
-        base64 = e.target.result;
-        let imageType = guessImageMime(base64);
-        let message = '{ "type": "medical", "record": "' + posting + '", "image": "' + base64 + '", "image_type": "' + imageType + '" }';
-        console.log('sending content=' + posting);
-        let totalContents = postedContents.value = postedContents.value + posting + '\n';
-        storePosts(totalContents);
-        dataChannel.send(message);
-        // 投稿完了したら入力欄の文字を消す
-        postingContents.value = '';
+        doPost(posting, e.target.result);
       }
       reader.readAsDataURL(blob);
    } else {
-      // using data-channel
-      let message = '{ "record": "' + posting + '", "image": "' + base64 + '" }';
-      console.log('sending content=' + posting);
-      let totalContents = postedContents.value = postedContents.value + posting + '\n';
-      storePosts(totalContents);
-      // Unsupported Error!
-      //let data = new Blob([posting], {type: 'text/plain'});
-      //data.forEach((d) => {
-      //  dataChannel.send(d);
-      //})
-      dataChannel.send(message);
-      // 投稿完了したら入力欄の文字を消す
-      postingContents.value = '';
+      doPost(posting, '');
     }
+  }
+
+  /**
+   * @param {string} posting contents of post(medical record).
+   * @param {string} base64 BASE64 encoded strings.
+   */
+  function doPost(posting, base64) {
+    let imageType = base64 ? guessImageMime(base64) : '';
+    let message = '{ "record": "' + posting + '", "image": "' + base64 + '", "image_type": "' + imageType + '" }';
+    console.log('sending content=' + posting);
+    let totalContents = postedContents.value = postedContents.value + posting + '\n';
+    storePosts(totalContents);
+    dataChannel.send(message);
+    // 投稿完了したら入力欄の文字を消す
+    postingContents.value = '';
   }
 
   // 投稿を受信
