@@ -41,6 +41,7 @@
   let thumnailCanvas = document.getElementById('canvas');
   let localStream = null;
   let dataChannel = null;
+  let remoteDataChannel = null;
   let peerConnection = null;
   let postedContents = document.getElementById('posted_contents');
   let postingContents = document.getElementById('posting_contents');
@@ -264,7 +265,7 @@
     // NOTE: DataChannel has no distinction between local and remote.
     peer.ondatachannel = function(event) {
       console.log('remoteDatachannel added.');
-      dataChannel = event.channel;
+      remoteDataChannel = event.channel;
     }
 
     // --- on get remote stream ---
@@ -576,7 +577,7 @@
     console.log('sending content=' + posting);
     let totalContents = postedContents.value = postedContents.value + posting + '\n';
     storePosts(totalContents);
-    dataChannel.send(message);
+    remoteDataChannel.send(message);
     // 投稿完了したら入力欄の文字を消す
     postingContents.value = '';
   }
