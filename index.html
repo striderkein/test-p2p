@@ -41,6 +41,7 @@
   let thumnailCanvas = document.getElementById('canvas');
   let localStream = null;
   let dataChannel = null;
+  let remoteDataChannel = null;
   let peerConnection = null;
   let postedContents = document.getElementById('posted_contents');
   let postingContents = document.getElementById('posting_contents');
@@ -219,8 +220,8 @@
     let turnUrl = 'ec2-13-115-2-96.ap-northeast-1.compute.amazonaws.com';
     let pc_config = {"iceServers":[
       {"urls": "stun:" + turnUrl + ":80"},
-      {"urls":"turn:" + turnUrl + ":80?transport=udp", "username":"user", "credential":"password"},
-      {"urls":"turn:" + turnUrl + ":80?transport=tcp", "username":"user", "credential":"password"}
+      {"urls":"turn:" + turnUrl + ":80?transport=udp", "username":"turnuser", "credential":"YBbtWvoZE1xjlWHS"},
+      {"urls":"turn:" + turnUrl + ":80?transport=tcp", "username":"turnuser", "credential":"YBbtWvoZE1xjlWHS"}
     ]};
     let peer = new RTCPeerConnection(pc_config);
 
@@ -264,7 +265,7 @@
     // NOTE: DataChannel has no distinction between local and remote.
     peer.ondatachannel = function(event) {
       console.log('remoteDatachannel added.');
-      dataChannel = event.channel;
+      remoteDataChannel = event.channel;
     }
 
     // --- on get remote stream ---
@@ -576,7 +577,7 @@
     console.log('sending content=' + posting);
     let totalContents = postedContents.value = postedContents.value + posting + '\n';
     storePosts(totalContents);
-    dataChannel.send(message);
+    remoteDataChannel.send(message);
     // 投稿完了したら入力欄の文字を消す
     postingContents.value = '';
   }
