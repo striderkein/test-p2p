@@ -160,7 +160,6 @@
       //console.log('roomBroadcastRef.on(data) data.key=' + data.key + ', data.val():', data.val());
       let message = data.val();
       let fromId = message.from;
-      members.value += fromId + '\n';
       if (fromId === clientId) {
         // ignore self message
         return;
@@ -292,7 +291,8 @@
     var ref = database.ref(databaseRoot + roomName + '/_direct_');
     // Attach an asynchronous callback to read the data at our posts reference
     ref.on('value', function(snapshot) {
-      console.log('snapshot.val: %O', snapshot.val());
+      //console.log('snapshot.val: %O', snapshot.val());
+      members.value += snapshot.val() + '\n';
     }, function (errorObject) {
       console.log('The read failed: ' + errorObject.code);
     });
