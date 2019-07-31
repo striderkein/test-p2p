@@ -244,15 +244,11 @@
 
   // --- broadcast message to all members in room
   function emitRoom(msg) {
-    //socket.emit('message', msg);
     msg.from = clientId;
     roomBroadcastRef.push(msg);
   }
 
   function emitTo(id, msg) {
-    //msg.sendto = id;
-    //socket.emit('message', msg);
-
     console.log('===== sending from=' + clientId + ' ,  to=' + id);
     msg.from = clientId;
     // NOTE: ここで `child_added` イベントが発火する
