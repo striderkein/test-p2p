@@ -245,6 +245,7 @@
   // --- broadcast message to all members in room
   function emitRoom(msg) {
     msg.from = clientId;
+    // NOTE:_broadcast_ 配下に `child_added` される
     roomBroadcastRef.push(msg);
   }
 
@@ -670,11 +671,6 @@
       return peerConnection.setLocalDescription(sessionDescription);
     }).then(function() {
       console.log('setLocalDescription() success in promise');
-      //// NOTE: DataChannel has no distinction between local and remote.
-      //peer.ondatachannel = function(event) {
-      //  console.log('remoteDatachannel added.');
-      //  remoteDataChannel = event.channel;
-      //}
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
       if (!useVanilla) {
