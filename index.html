@@ -161,7 +161,6 @@
       //console.log('roomBroadcastRef.on(data) data.key=' + data.key + ', data.val():', data.val());
       let message = data.val();
       let fromId = message.from;
-      //fromId = message.from;
       members.value += fromId + '\n';
       if (fromId === clientId) {
         // ignore self message
@@ -256,6 +255,7 @@
 
     console.log('===== sending from=' + clientId + ' ,  to=' + id);
     msg.from = clientId;
+    // NOTE: ここで `child_added` イベントが発火する
     database.ref(databaseRoot + room + '/_direct_/' + id).push(msg);
   }
 
