@@ -133,7 +133,7 @@
   //let fromId;
 
   let room = getRoomName();
-  getRoomNamesFrom();
+  getMemberNamesFrom();
   joinRoom(room);
   setRoomLink(room);
 
@@ -282,7 +282,7 @@
     return room;
   }
 
-  function getRoomNamesFrom() {
+  function getMemberNamesFrom() {
     //var ref = db.ref(databaseRoot + 'rooms');
     var ref = database.ref(databaseRoot + '/multi/room_16c28500c7249/_direct_');
     // Attach an asynchronous callback to read the data at our posts reference
