@@ -133,7 +133,7 @@
   //let fromId;
 
   let room = getRoomName();
-  getMemberNamesFrom();
+  getMemberNamesFrom(room);
   joinRoom(room);
   setRoomLink(room);
 
@@ -282,9 +282,18 @@
     return room;
   }
 
-  function getMemberNamesFrom() {
+  /**
+   * @param {string} memberId member ID
+   */
+  function getRoomNameBy(memberId) {
+  }
+
+  /**
+   * @param {string} roomName name of room
+   */
+  function getMemberNamesFrom(roomName) {
     //var ref = db.ref(databaseRoot + 'rooms');
-    var ref = database.ref(databaseRoot + '/multi/room_16c28500c7249/_direct_');
+    var ref = database.ref(databaseRoot + roomName + '/_direct_');
     // Attach an asynchronous callback to read the data at our posts reference
     ref.on('value', function(snapshot) {
       console.log('snapshot.val: %O', snapshot.val());
