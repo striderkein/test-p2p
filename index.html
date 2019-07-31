@@ -2,37 +2,55 @@
 <html>
 <head>
  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+ <link rel="stylesheet" type="text/css" href="./style/main.css">
  <title>NINKATSU</title>
 </head>
 <body onload="init()">
   NINKATSU<br />
-  <button type="button" onclick="connect();">Connect</button>
-  <button type="button" onclick="postContents();">Post</button>
-  <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
-  <button type="button" onclick="hangUp();">Hang Up</button> 
-  <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
-  <a id="room_link" href="" target="_blank">Open another window (link to this room)</a>
-  <div>
-    <textarea id="member_id" style="width: 100px; height: 30px; border: 1px solid black;"></textarea>
-    <textarea id="members" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
-    <textarea id="posted_contents" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
-    <textarea id="posting_contents" style="width: 480px; height: 30px; border: 1px solid black;"></textarea>
+  <div class="login-modal-wrapper" id="login-modal">
+    <div class="modal">
+      <div id="close-modal">
+        <i class="fa fa-2x fa-times"></i>
+      </div>
+      <div id="login-form">
+        <h2>NINKATSU ログイン</h2>
+        <form action="#">
+          <input class="form-control" type="text" placeholder="メールアドレス">
+          <input class="form-control" type="password" placeholder="パスワード">
+          <div id="submit-btn">ログイン</div>
+        </form>
+      </div>
+    </div>
   </div>
-  <!-- ファイル選択ボタン -->
-  <div style="width: 500px">
-    <form enctype="multipart/form-data" method="post">
-      <input id="input_file" type="file" name="userfile" accept="image/*">
-    </form>
+  <div id="after_login">
+    <button type="button" onclick="connect();">Connect</button>
+    <button type="button" onclick="postContents();">Post</button>
+    <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
+    <button type="button" onclick="hangUp();">Hang Up</button> 
+    <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
+    <a id="room_link" href="" target="_blank">Open another window (link to this room)</a>
+    <div>
+      <textarea id="member_id" style="width: 100px; height: 30px; border: 1px solid black;"></textarea>
+      <textarea id="members" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
+      <textarea id="posted_contents" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
+      <textarea id="posting_contents" style="width: 480px; height: 30px; border: 1px solid black;"></textarea>
+    </div>
+    <!-- ファイル選択ボタン -->
+    <div style="width: 500px">
+      <form enctype="multipart/form-data" method="post">
+        <input id="input_file" type="file" name="userfile" accept="image/*">
+      </form>
+    </div>
+    <!-- サムネイル表示領域 -->
+    <canvas id="canvas" width="0" height="0"></canvas>
+    <p>SDP to send:<br />
+      <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly">SDP to send</textarea>
+    </p>
+    <p>SDP received:&nbsp;
+      <br />
+      <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
+    </p>
   </div>
-  <!-- サムネイル表示領域 -->
-  <canvas id="canvas" width="0" height="0"></canvas>
-  <p>SDP to send:<br />
-    <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly">SDP to send</textarea>
-  </p>
-  <p>SDP received:&nbsp;
-    <br />
-    <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
-  </p>
 </body>
 <!-- The core Firebase JS SDK is always required and must be listed first -->
 <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-app.js"></script>
