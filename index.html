@@ -222,11 +222,11 @@
         addIceCandidate(fromId, candidate);
       }
       
-      if (! dataDebugFlag) {
-        // remove direct message
-        let messageRef =  database.ref(databaseRoot + room + '/_direct_/' + clientId + '/' + data.key);
-        messageRef.remove();
-      }
+      //if (! dataDebugFlag) {
+      //  // remove direct message
+      //  let messageRef =  database.ref(databaseRoot + room + '/_direct_/' + clientId + '/' + data.key);
+      //  messageRef.remove();
+      //}
     });
   }
 
