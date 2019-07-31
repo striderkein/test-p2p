@@ -13,6 +13,7 @@
   <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
   <a id="room_link" href="" target="_blank">Open another window (link to this room)</a>
   <div>
+    <textarea id="member_id" style="width: 100px; height: 30px; border: 1px solid black;"></textarea>
     <textarea id="members" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
     <textarea id="posted_contents" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
     <textarea id="posting_contents" style="width: 480px; height: 30px; border: 1px solid black;"></textarea>
@@ -54,6 +55,7 @@
   let dataChannel = null;
   let remoteDataChannel = null;
   let peerConnection = null;
+  let memberId = document.getElementById('member_id');
   let members = document.getElementById('members');
   let postedContents = document.getElementById('posted_contents');
   let postingContents = document.getElementById('posting_contents');
