@@ -265,14 +265,14 @@
     let url = document.location.href;
     let args = url.split('?');
     if (args.length > 1) {
-      // 2回め以降
+      // ルーム名を指定した場合
       let room = args[1];
       if (room != '') {
         return room;
       }
     }
     
-    // 初回
+    // ルーム名を指定しなかった場合
     // generate random room, and replace URL
     let room = 'room_' + getUniqueStr(); 
     window.history.pushState(null, null, 'index.html?' + room);
