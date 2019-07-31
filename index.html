@@ -843,14 +843,13 @@
   // 自分が投稿
   function postContents() {
     // FIXME: impl function.
-    let fromId = getMySpouseId();
-    let peerConnection = getConnection(fromId);
-    // shutout over 3peer
-    if (! peerConnection) {
-      console.error('peerConnection NOT exist!');
-      alert('please post after connected.')
-      return;
-    }
+    //let fromId = getMySpouseId();
+    //let peerConnection = getConnection(fromId);
+    //if (! peerConnection) {
+    //  console.error('peerConnection NOT exist!');
+    //  alert('please post after connected.')
+    //  return;
+    //}
     let posting = postingContents.value;
     if (!posting && !blob) {
       alert('投稿には文字または画像が必須です。');
