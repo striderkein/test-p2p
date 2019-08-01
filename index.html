@@ -966,6 +966,11 @@
     roomBroadcastRef.push(msg);
   }
 
+  /**
+   * _direct_ の下に SDP, ICE candidate オブジェクトを作成する。
+   * @param {string} id 送信先となる相手のメンバーID
+   * @param {object} msg SDP または ICE candidate を含むメッセージオブジェクト
+   */
   function emitTo(id, msg) {
     console.log('===== sending from=' + clientId + ' ,  to=' + id);
     msg.from = clientId;
