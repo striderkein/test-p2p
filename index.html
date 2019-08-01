@@ -278,20 +278,6 @@
   }
   // ----- use firebase.io ---- //
 
-  // --- broadcast message to all members in room
-  function emitRoom(msg) {
-    msg.from = clientId;
-    // NOTE:_broadcast_ 配下に `child_added` される
-    roomBroadcastRef.push(msg);
-  }
-
-  function emitTo(id, msg) {
-    console.log('===== sending from=' + clientId + ' ,  to=' + id);
-    msg.from = clientId;
-    // NOTE: ここで `child_added` イベントが発火する
-    database.ref(databaseRoot + room + '/_direct_/' + id).push(msg);
-  }
-
   function clearMessage() {
     clientRef.set({});
   }
@@ -536,18 +522,6 @@
   //  textToReceiveSdp.value ='';
   //}
  
-  function sendSdp(id, sessionDescription) {
-    console.log('---sending sdp ---');
-    textForSendSdp.value = sessionDescription.sdp;
-    /*---
-    textForSendSdp.focus();
-    textForSendSdp.select();
-    ----*/
-    let message = { type: sessionDescription.type, sdp: sessionDescription.sdp };
-    console.log('sending SDP=' + message);
-    emitTo(id, message);
-  }
-
   // ---------------------- connection handling -----------------------
   /**
    * @return {RTCPeerConection} peer RTCPeerConnection object
@@ -756,6 +730,18 @@
     }).catch(function(err) {
       console.error('setRemoteDescription(answer) ERROR: ', err);
     });
+  }
+
+  function sendSdp(id, sessionDescription) {
+    console.log('---sending sdp ---');
+    textForSendSdp.value = sessionDescription.sdp;
+    /*---
+    textForSendSdp.focus();
+    textForSendSdp.select();
+    ----*/
+    let message = { type: sessionDescription.type, sdp: sessionDescription.sdp };
+    console.log('sending SDP=' + message);
+    emitTo(id, message);
   }
 
   function addIceCandidate(id, candidate) {
@@ -968,16 +954,30 @@
     }
   }
 
+  // ---- multi party --
+  function callMe() {
+    emitRoom({type: 'call me'});
+  }
+
+  // --- broadcast message to all members in room
+  function emitRoom(msg) {
+    msg.from = clientId;
+    // NOTE:_broadcast_ 配下に `child_added` される
+    roomBroadcastRef.push(msg);
+  }
+
+  function emitTo(id, msg) {
+    console.log('===== sending from=' + clientId + ' ,  to=' + id);
+    msg.from = clientId;
+    // NOTE: ここで `child_added` イベントが発火する
+    database.ref(databaseRoot + room + '/_direct_/' + id).push(msg);
+  }
+
   // close PeerConnection
   function hangUp() {
     emitRoom({ type: 'bye' });  
     clearMessage(); // clear firebase
     stopAllConnection();
-  }
-
-  // ---- multi party --
-  function callMe() {
-    emitRoom({type: 'call me'});
   }
 
   function _assert(desc, v) {
