@@ -23,6 +23,9 @@
     </div>
   </div>
   <div id="after_login">
+    <div>
+      <p>you logined as... <span id="logined_user"></span></p>
+    </div>
     <button type="button" onclick="connect();">Connect</button>
     <button type="button" onclick="postContents();">Post</button>
     <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
@@ -166,6 +169,7 @@
         //getMemberNamesFrom(room);
         joinRoom(room);
         setRoomLink(room);
+        $('#logined_user').text(member.name);
 
         $('#login-modal').fadeOut();
       }
@@ -336,10 +340,10 @@
   function getMembers() {
     // TODO: get from DB?
     let members = [
-      { mail: "taro@hoge.com", pass: "taro", coupling_id: "A", room: "room_A" },
-      { mail: "hanako@hoge.com", pass: "hanako", coupling_id: "A", room: "room_A" },
-      { mail: "jiro@fuga.com", pass: "jiro", coupling_id: "B", room: "room_B" },
-      { mail: "tamako@fuga.com", pass: "tamako", coupling_id: "B", room: "room_B" }
+      { name: "taro", mail: "taro@hoge.com", pass: "taro", coupling_id: "A", room: "room_A" },
+      { name: "hanako", mail: "hanako@hoge.com", pass: "hanako", coupling_id: "A", room: "room_A" },
+      { name: "jiro", mail: "jiro@fuga.com", pass: "jiro", coupling_id: "B", room: "room_B" },
+      { name: "tamako", mail: "tamako@fuga.com", pass: "tamako", coupling_id: "B", room: "room_B" }
     ]
     return members;
   }
