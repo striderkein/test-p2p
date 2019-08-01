@@ -74,7 +74,7 @@
   let remoteDataChannel = null;
   let peerConnection = null;
   let memberId = document.getElementById('member_id');
-  let members = document.getElementById('members');
+  // let members = document.getElementById('members');
   let postedContents = document.getElementById('posted_contents');
   let postingContents = document.getElementById('posting_contents');
   let textForSendSdp = document.getElementById('text_for_send_sdp');
@@ -311,8 +311,8 @@
     var ref = database.ref(databaseRoot + roomName + '/_direct_');
     // Attach an asynchronous callback to read the data at our posts reference
     ref.on('value', function(snapshot) {
-      //console.log('snapshot.val: %O', snapshot.val());
-      members.value += snapshot.val() + '\n';
+      console.log('snapshot.val: %O', snapshot.val());
+      //members.value += snapshot.val() + '\n';
     }, function (errorObject) {
       console.log('The read failed: ' + errorObject.code);
     });
