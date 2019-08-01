@@ -152,11 +152,28 @@
   let clientId;
   //let fromId;
 
-  let room = getRoomName();
-  getMemberNamesFrom(room);
-  joinRoom(room);
-  setRoomLink(room);
+  let room = null;
 
+  function login() {
+    var logined = false;
+    let members = getMembers();
+    members.some(member => {
+      if (member.mail === $('#mail_address').val() && member.pass === $('#password').val()) {
+        logined = true;
+        console.log('login succeeded');
+
+        //let room = getRoomName();
+        room = member.room;
+        //let roomName = getRoomNameBy('fuga');
+        //getMemberNamesFrom(room);
+        joinRoom(room);
+        setRoomLink(room);
+
+        $('#login-modal').fadeOut();
+      }
+    });
+    if (!logined) alert('failed');
+  }
   /**
    * @param {string} room room name.
    */
@@ -298,9 +315,19 @@
   }
 
   /**
-   * @param {string} memberId member ID
+  /**
+   * @return {array<member>} member object array
    */
   function getRoomNameBy(memberId) {
+  function getMembers() {
+    // TODO: get from DB?
+    let members = [
+      { mail: "taro@hoge.com", pass: "taro", coupling_id: "A", room: "room_A" },
+      { mail: "hanako@hoge.com", pass: "hanako", coupling_id: "A", room: "room_A" },
+      { mail: "jiro@fuga.com", pass: "jiro", coupling_id: "B", room: "room_B" },
+      { mail: "tamako@fuga.com", pass: "tamako", coupling_id: "B", room: "room_B" }
+    ]
+    return members;
   }
 
   /**
