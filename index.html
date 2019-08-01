@@ -1,38 +1,68 @@
 <!DOCTYPE html>
 <html>
 <head>
- <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
- <title>NINKATSU</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <link rel="stylesheet" type="text/css" href="./style/main.css">
+  <title>NINKATSU</title>
 </head>
 <body onload="init()">
   NINKATSU<br />
-  <button type="button" onclick="connect();">Connect</button>
-  <button type="button" onclick="postContents();">Post</button>
-  <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
-  <button type="button" onclick="hangUp();">Hang Up</button> 
-  <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
-  <div>
-    <textarea id="posted_contents" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
-    <textarea id="posting_contents" style="width: 480px; height: 30px; border: 1px solid black;"></textarea>
+  <div class="login-modal-wrapper" id="login-modal">
+    <div class="modal">
+      <div id="close-modal">
+        <i class="fa fa-2x fa-times"></i>
+      </div>
+      <div id="login-form">
+        <h2>NINKATSU ログイン</h2>
+        <!-- <form action="#"> -->
+          <input id="mail_address" class="form-control" type="text" placeholder="メールアドレス">
+          <input id="password" class="form-control" type="password" placeholder="パスワード">
+          <button id="submit-btn" type="button" onclick="login();">ログイン</div>
+        <!-- </form> -->
+      </div>
+    </div>
   </div>
-  <!-- ファイル選択ボタン -->
-  <div style="width: 500px">
-    <form enctype="multipart/form-data" method="post">
-      <input id="input_file" type="file" name="userfile" accept="image/*">
-    </form>
+  <div id="after_login">
+    <button type="button" onclick="connect();">Connect</button>
+    <button type="button" onclick="postContents();">Post</button>
+    <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
+    <button type="button" onclick="hangUp();">Hang Up</button> 
+    <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
+    <a id="room_link" href="" target="_blank">Open another window (link to this room)</a>
+    <div>
+      <textarea id="member_id" style="width: 100px; height: 30px; border: 1px solid black;"></textarea>
+      <textarea id="members" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
+      <textarea id="posted_contents" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
+      <textarea id="posting_contents" style="width: 480px; height: 30px; border: 1px solid black;"></textarea>
+    </div>
+    <!-- ファイル選択ボタン -->
+    <div style="width: 500px">
+      <form enctype="multipart/form-data" method="post">
+        <input id="input_file" type="file" name="userfile" accept="image/*">
+      </form>
+    </div>
+    <!-- サムネイル表示領域 -->
+    <canvas id="canvas" width="0" height="0"></canvas>
+    <p>SDP to send:<br />
+      <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly">SDP to send</textarea>
+    </p>
+    <p>SDP received:&nbsp;
+      <br />
+      <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
+    </p>
   </div>
-  <!-- サムネイル表示領域 -->
-  <canvas id="canvas" width="0" height="0"></canvas>
-  <p>SDP to send:<br />
-    <textarea id="text_for_send_sdp" rows="5" cols="60" readonly="readonly">SDP to send</textarea>
-  </p>
-  <p>SDP received:&nbsp;
-    <br />
-    <textarea id="text_for_receive_sdp" rows="5" cols="60"></textarea>
-  </p>
 </body>
+<!-- The core Firebase JS SDK is always required and must be listed first -->
+<script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-database.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
 <script type="text/javascript">
+  // ---- for multi party -----
+  let peerConnections = [];
+  //let remoteStreams = [];
+  //let remoteVideos = [];
+  const MAX_CONNECTION_COUNT = 3;
+
   var file = null; // 選択されるファイル
   var blob = null; // 画像(BLOBデータ)
   var useVanilla = false; // use Trickle ICE on default
@@ -43,6 +73,8 @@
   let dataChannel = null;
   let remoteDataChannel = null;
   let peerConnection = null;
+  let memberId = document.getElementById('member_id');
+  // let members = document.getElementById('members');
   let postedContents = document.getElementById('posted_contents');
   let postingContents = document.getElementById('posting_contents');
   let textForSendSdp = document.getElementById('text_for_send_sdp');
@@ -59,50 +91,359 @@
   // or you can use chrome app (only work with Chrome)
   //  https://chrome.google.com/webstore/detail/simple-message-server/bihajhgkmpfnmbmdnobjcdhagncbkmmp
   //
-  let wsUrl = 'wss://ninkatsu-sig.ga:3001/';
-  let ws = new WebSocket(wsUrl);
-  ws.onopen = function(evt) {
-    console.log('ws open()');
+  //let wsUrl = 'wss://ninkatsu-sig.ga:3001/';
+  //let ws = new WebSocket(wsUrl);
+  //ws.onopen = function(evt) {
+  //  console.log('ws open()');
+  //};
+  //ws.onerror = function(err) {
+  //  console.error('ws onerror() ERR:', err);
+  //};
+  //ws.onmessage = function(evt) {
+  //  console.log('ws onmessage() data:', evt.data);
+  //  let message = JSON.parse(evt.data);
+  //  if (message.type === 'offer') {
+  //    // -- got offer ---
+  //    console.log('Received offer ...');
+  //    textToReceiveSdp.value = message.sdp;
+  //    let offer = new RTCSessionDescription(message);
+  //    setOffer(offer);
+  //  }
+  //  else if (message.type === 'answer') {
+  //    // --- got answer ---
+  //    console.log('Received answer ...');
+  //    textToReceiveSdp.value = message.sdp;
+  //    let answer = new RTCSessionDescription(message);
+  //    setAnswer(answer);
+  //  }
+  //  else if (message.type === 'candidate') {
+  //    // --- got ICE candidate ---
+  //    console.log('Received ICE candidate ...');
+  //    let candidate = new RTCIceCandidate(message.ice);
+  //    console.log(candidate);
+  //    addIceCandidate(candidate);
+  //  }
+  //  else {
+  //    console.error('unknown message-type!');
+  //  }
+  //};
+
+  // ----- use firebase.io ----
+  // impl here.
+  const dataDebugFlag = false;
+  // Initialize Firebase
+  // Your web app's Firebase configuration
+  var firebaseConfig = {
+    apiKey: "AIzaSyC1OBg2dia_Gjca39qnhGJOugcqXI2RtQ4",
+    authDomain: "ninkatsu-sig-fire.firebaseapp.com",
+    databaseURL: "https://ninkatsu-sig-fire.firebaseio.com",
+    projectId: "ninkatsu-sig-fire",
+    storageBucket: "",
+    messagingSenderId: "706754252656",
+    appId: "1:706754252656:web:ba1736c22779caa1"
   };
-  ws.onerror = function(err) {
-    console.error('ws onerror() ERR:', err);
-  };
-  ws.onmessage = function(evt) {
-    console.log('ws onmessage() data:', evt.data);
-    let message = JSON.parse(evt.data);
-    if (message.type === 'offer') {
-      // -- got offer ---
-      console.log('Received offer ...');
-      textToReceiveSdp.value = message.sdp;
-      let offer = new RTCSessionDescription(message);
-      setOffer(offer);
+  let databaseRoot = 'ninkatsu-p2p/multi/'; // <--- plaase set your database root for signaling
+  //let databaseRoot = 'ninkatsu-p2p/'; // <--- plaase set your database root for signaling
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  let database = firebase.database();
+  let roomBroadcastRef;
+  let clientRef;
+  let clientId;
+  //let fromId;
+
+  let room = null;
+
+  function login() {
+    var logined = false;
+    let members = getMembers();
+    members.some(member => {
+      if (member.mail === $('#mail_address').val() && member.pass === $('#password').val()) {
+        logined = true;
+        console.log('login succeeded');
+
+        //let room = getRoomName();
+        room = member.room;
+        //let roomName = getRoomNameBy('fuga');
+        //getMemberNamesFrom(room);
+        joinRoom(room);
+        setRoomLink(room);
+
+        $('#login-modal').fadeOut();
+      }
+    });
+    if (!logined) alert('failed');
+  }
+  /**
+   * @param {string} room room name.
+   */
+  function joinRoom(room) {
+    console.log('join room name = ' + room);
+
+    let key = database.ref(databaseRoot + room + '/_join_').push({ joined : 'unknown'}).key
+    clientId = 'member_' + key;
+    //clientId = 'member_-LkcOfB_lVUMXNyTJAvj';
+    console.log('joined to room=' + room + ' as clientId=' + clientId);
+    database.ref(databaseRoot + room + '/_join_/' + key).update({ joined : clientId});
+
+    // remove join object
+    //if (! dataDebugFlag) {
+    //  let joinRef =  database.ref(databaseRoot + room + '/_join_/' + key);
+    //  joinRef.remove();
+    //}
+
+    roomBroadcastRef = database.ref(databaseRoot + room + '/_broadcast_');
+    roomBroadcastRef.on('child_added', function(data) {
+      //console.log('roomBroadcastRef.on(data) data.key=' + data.key + ', data.val():', data.val());
+      let message = data.val();
+      let fromId = message.from;
+      if (fromId === clientId) {
+        // ignore self message
+        return;
+      }
+
+      if (message.type === 'call me') {
+        //if (! isReadyToConnect()) {
+        //  console.log('Not ready to connect, so ignore');
+        //  return;
+        //}
+        //else if (! canConnectMore()) {
+        if (! canConnectMore()) {
+          console.warn('TOO MANY connections, so ignore');
+        }
+
+        if (isConnectedWith(fromId)) {
+          // already connnected, so skip
+          console.log('already connected, so ignore');
+        }
+        else {
+          // connect new party
+          makeOffer(fromId);
+        }
+      }
+      else if (message.type === 'bye') {
+        if (isConnectedWith(fromId)) {
+          stopConnection(fromId);
+        }
+      }
+    });
+
+    clientRef = database.ref(databaseRoot + room + '/_direct_/' + clientId);
+    clientRef.on('child_added', function(data) {
+      //console.log('clientRef.on(data)  data.key=' + data.key + ', data.val():', data.val());
+      let message = data.val();
+      let fromId = message.from;
+
+      if (message.type === 'offer') {
+        // -- got offer ---
+        console.log('Received offer ... fromId=' + fromId);
+        //let offer = message.sessionDescription;
+        textToReceiveSdp.value = message.sdp;
+        let offer = new RTCSessionDescription(message);
+        setOffer(fromId, offer);
+      }
+      else if (message.type === 'answer') {
+        // --- got answer ---
+        console.log('Received answer ... fromId=' + fromId);
+        //let answer = message.sessionDescription;
+        textToReceiveSdp.value = message.sdp;
+        let answer = new RTCSessionDescription(message);
+        setAnswer(fromId, answer);
+      }
+      else if (message.type === 'candidate') {
+        // --- got ICE candidate ---
+        console.log('Received ICE candidate ... fromId=' + fromId);
+        //let candidate = new RTCIceCandidate(message.ice);
+        let candidate = new RTCIceCandidate(JSON.parse(message.ice)); // <---- JSON
+        console.log(candidate);
+        addIceCandidate(fromId, candidate);
+      }
+      
+      //if (! dataDebugFlag) {
+      //  // remove direct message
+      //  let messageRef =  database.ref(databaseRoot + room + '/_direct_/' + clientId + '/' + data.key);
+      //  messageRef.remove();
+      //}
+    });
+  }
+
+  function setRoomLink(room) {
+    let url = document.location.href;
+    let anchorLink = document.getElementById('room_link');
+    anchorLink.href = url;
+    //let anchorMail = document.getElementById('mail_link');
+    //let mailtoUrl = 'mailto:?subject=invitation-of-multi-party-chat&body=' + url;
+    //anchorMail.href = mailtoUrl;
+  }
+  // ----- use firebase.io ---- //
+
+  // --- broadcast message to all members in room
+  function emitRoom(msg) {
+    msg.from = clientId;
+    // NOTE:_broadcast_ 配下に `child_added` される
+    roomBroadcastRef.push(msg);
+  }
+
+  function emitTo(id, msg) {
+    console.log('===== sending from=' + clientId + ' ,  to=' + id);
+    msg.from = clientId;
+    // NOTE: ここで `child_added` イベントが発火する
+    database.ref(databaseRoot + room + '/_direct_/' + id).push(msg);
+  }
+
+  function clearMessage() {
+    clientRef.set({});
+  }
+
+  // -- room名を取得 --
+  function getRoomName() { // たとえば、 URLに  ?roomname  とする
+    let url = document.location.href;
+    let args = url.split('?');
+    if (args.length > 1) {
+      // ルーム名を指定した場合
+      let room = args[1];
+      if (room != '') {
+        return room;
+      }
     }
-    else if (message.type === 'answer') {
-      // --- got answer ---
-      console.log('Received answer ...');
-      textToReceiveSdp.value = message.sdp;
-      let answer = new RTCSessionDescription(message);
-      setAnswer(answer);
-    }
-    else if (message.type === 'candidate') {
-      // --- got ICE candidate ---
-      console.log('Received ICE candidate ...');
-      let candidate = new RTCIceCandidate(message.ice);
-      console.log(candidate);
-      addIceCandidate(candidate);
+    
+    // ルーム名を指定しなかった場合
+    // generate random room, and replace URL
+    let room = 'room_' + getUniqueStr(); 
+    window.history.pushState(null, null, 'index.html?' + room);
+    return room;
+  }
+
+  /**
+   * @param {string} couplingId coupling ID
+   * @return {string|null} roomName
+   */
+  function getRoomNameBy(couplingId) {
+    var roomName = null;
+    var data = [
+      { coupling_id: "hoge", room_name: "room_A" },
+      { coupling_id: "fuga", room_name: "room_B" }
+    ]
+    data.find(d => {
+      if (d.coupling_id === couplingId) {
+        roomName = d.room_name;
+      }
+    });
+    return roomName;
+  }
+
+  /**
+   * @return {array<member>} member object array
+   */
+  function getMembers() {
+    // TODO: get from DB?
+    let members = [
+      { mail: "taro@hoge.com", pass: "taro", coupling_id: "A", room: "room_A" },
+      { mail: "hanako@hoge.com", pass: "hanako", coupling_id: "A", room: "room_A" },
+      { mail: "jiro@fuga.com", pass: "jiro", coupling_id: "B", room: "room_B" },
+      { mail: "tamako@fuga.com", pass: "tamako", coupling_id: "B", room: "room_B" }
+    ]
+    return members;
+  }
+
+  /**
+   * @param {string} roomName name of room
+   */
+  function getMemberNamesFrom(roomName) {
+    //var ref = db.ref(databaseRoot + 'rooms');
+    var ref = database.ref(databaseRoot + roomName + '/_direct_');
+    // Attach an asynchronous callback to read the data at our posts reference
+    ref.on('value', function(snapshot) {
+      console.log('snapshot.val: %O', snapshot.val());
+      //members.value += snapshot.val() + '\n';
+    }, function (errorObject) {
+      console.log('The read failed: ' + errorObject.code);
+    });
+  }
+
+  // http://qiita.com/coa00@github/items/679b0b5c7c468698d53f
+  // 疑似ユニークIDを生成
+  function getUniqueStr(myStrong){
+    var strong = 1000;
+    if (myStrong) strong = myStrong;
+    return new Date().getTime().toString(16)  + Math.floor(strong*Math.random()).toString(16);
+  }
+
+  /**
+   * @return {string} sid spouse id
+   */
+  function getMySpouseId() {
+    let sid = '';
+    let ids = [
+      { user: "member_-LkcOfB_lVUMXNyTJAvj", spouse: "member_-LkcQrBgUULEtaAFlpkx" },
+      { user: "member_-LkcQrBgUULEtaAFlpkx", spouse: "member_-LkcOfB_lVUMXNyTJAvj" },
+    ];
+    ids.forEach((id) => {
+      if (id.user === clientId) {
+        sid = id.spouse;
+      }
+    });
+    return sid;
+  }
+
+  // ---- for multi party -----
+  //function isReadyToConnect() {
+  //  if (localStream) {
+  //    return true;
+  //  }
+  //  else {
+  //    return false;
+  //  }
+  //}
+
+  // --- RTCPeerConnections ---
+  function getConnectionCount() {
+    return peerConnections.length;
+  }
+
+  function canConnectMore() {
+    return (getConnectionCount() < MAX_CONNECTION_COUNT);
+  }
+
+  function isConnectedWith(id) {
+    if (peerConnections[id])  {
+      return true;
     }
     else {
-      console.error('unknown message-type!');
+      return false;
     }
-  };
-  
-  function addIceCandidate(candidate) {
-    if (peerConnection) {
-      peerConnection.addIceCandidate(candidate);
+  }
+
+  function addConnection(id, peer) {
+    _assert('addConnection() peer', peer);
+    _assert('addConnection() peer must NOT EXIST', (! peerConnections[id]));
+    peerConnections[id] = peer;
+  }
+
+  function getConnection(id) {
+    let peer = peerConnections[id];
+    _assert('getConnection() peer must exist', peer);
+    return peer;
+  }
+
+  function deleteConnection(id) {
+    _assert('deleteConnection() peer must exist', peerConnections[id]);
+    delete peerConnections[id];
+  }
+
+  function stopConnection(id) {
+    //detachVideo(id);
+
+    if (isConnectedWith(id)) {
+      let peer = getConnection(id);
+      peer.close();
+      deleteConnection(id);
     }
-    else {
-      console.error('PeerConnection not exist!');
-      return;
+  }
+
+  function stopAllConnection() {
+    for (let id in peerConnections) {
+      stopConnection(id);
     }
   }
 
@@ -194,22 +535,23 @@
   //  textToReceiveSdp.value ='';
   //}
  
-  function sendSdp(sessionDescription) {
+  function sendSdp(id, sessionDescription) {
     console.log('---sending sdp ---');
     textForSendSdp.value = sessionDescription.sdp;
     /*---
     textForSendSdp.focus();
     textForSendSdp.select();
     ----*/
-    let message = JSON.stringify(sessionDescription);
+    let message = { type: sessionDescription.type, sdp: sessionDescription.sdp };
     console.log('sending SDP=' + message);
-    ws.send(message);
+    emitTo(id, message);
   }
+
   // ---------------------- connection handling -----------------------
   /**
    * @return {RTCPeerConection} peer RTCPeerConnection object
    */
-  function prepareNewConnection() {
+  function prepareNewConnection(id) {
     /*
     let pc_config = {"iceServers":[
       {"urls": "stun:stun.l.google.com:19302"},
@@ -269,27 +611,27 @@
     }
 
     // --- on get remote stream ---
-    if ('ontrack' in peer) {
-      peer.ontrack = function(event) {
-        console.log('-- peer.ontrack()');
-        let stream = event.streams[0];
-        playVideo(remoteVideo, stream);
-      };
-    }
-    else {
-      peer.onaddstream = function(event) {
-        console.log('-- peer.onaddstream()');
-        let stream = event.stream;
-        playVideo(remoteVideo, stream);
-      };
-    }
+    //if ('ontrack' in peer) {
+    //  peer.ontrack = function(event) {
+    //    console.log('-- peer.ontrack()');
+    //    let stream = event.streams[0];
+    //    playVideo(remoteVideo, stream);
+    //  };
+    //}
+    //else {
+    //  peer.onaddstream = function(event) {
+    //    console.log('-- peer.onaddstream()');
+    //    let stream = event.stream;
+    //    playVideo(remoteVideo, stream);
+    //  };
+    //}
     // --- on get local ICE candidate
     peer.onicecandidate = function (evt) {
       if (evt.candidate) {
         console.log('candidate: ' + evt.candidate);
         // Trickle ICE の場合は、ICE candidateを相手に送る
         if (!useVanilla) {
-          sendIceCandidate(evt.candidate);
+          sendIceCandidate(id, evt.candidate);
         }
         // Vanilla ICE の場合には、何もしない
       } else {
@@ -297,7 +639,7 @@
         // Trickle ICE の場合は、何もしない
         // Vanilla ICE の場合には、ICE candidateを含んだSDPを相手に送る
         if (useVanilla) {
-          sendSdp(peer.localDescription);
+          sendSdp(id, peer.localDescription);
         }
       }
     };
@@ -330,95 +672,108 @@
       console.log('-- peer.onremovestream()');
       pauseVideo(remoteVideo);
     };
-    
-    
+ 
     // -- add local stream --
-    if (localStream) {
-      console.log('Adding local stream...');
-      //peer.addStream(localStream);
-    }
-    else {
-      console.warn('no local stream, but continue.');
-    }
+    //if (localStream) {
+    //  console.log('Adding local stream...');
+    //  //peer.addStream(localStream);
+    //}
+    //else {
+    //  console.warn('no local stream, but continue.');
+    //}
     return peer;
   }
 
-  function sendIceCandidate(candidate) {
-    console.log('---sending ICE candidate ---');
-    let obj = { type: 'candidate', ice: candidate };
-    let message = JSON.stringify(obj);
-    console.log('sending candidate=' + message);
-    ws.send(message);
-  }
-
-  function makeOffer() {
+  function makeOffer(id) {
+    _assert('makeOffer must not connected yet', (!isConnectedWith(id)) );
     // RTCPeerConnection オブジェクトを生成
-    peerConnection = prepareNewConnection();
+    let peerConnection = prepareNewConnection(id);
+    addConnection(id, peerConnection);
     peerConnection.createOffer()
     .then(function (sessionDescription) {
-      console.log('createOffer() succsess in promise');
+      console.log('createOffer() success in promise');
       return peerConnection.setLocalDescription(sessionDescription);
     }).then(function() {
       console.log('setLocalDescription() success in promise');
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
       if (!useVanilla) {
-        sendSdp(peerConnection.localDescription);
+        sendSdp(id, peerConnection.localDescription);
       }
     }).catch(function(err) {
       console.error(err);
     });
   }
 
-  function setOffer(sessionDescription) {
-    if (peerConnection) {
-      console.error('peerConnection alreay exist!');
-    }
+  function setOffer(id, sessionDescription) {
+    _assert('setOffer must not connected yet', (!isConnectedWith(id)) );    
     // RTCPeerConnection オブジェクトを生成
-    peerConnection = prepareNewConnection();
+    let peerConnection = prepareNewConnection(id);
+    addConnection(id, peerConnection);
     peerConnection.setRemoteDescription(sessionDescription)
     .then(function() {
-      console.log('setRemoteDescription(offer) succsess in promise');
-      makeAnswer();
+      console.log('setRemoteDescription(offer) success in promise');
+      makeAnswer(id);
     }).catch(function(err) {
       console.error('setRemoteDescription(offer) ERROR: ', err);
     });
   }
   
-  function makeAnswer() {
+  function makeAnswer(id) {
     console.log('sending Answer. Creating remote session description...' );
-    if (! peerConnection) {
+    let peerConnection = getConnection(id);
+    if (!peerConnection) {
       console.error('peerConnection NOT exist!');
       return;
     }
     
     peerConnection.createAnswer()
     .then(function (sessionDescription) {
-      console.log('createAnswer() succsess in promise');
+      console.log('createAnswer() success in promise');
       return peerConnection.setLocalDescription(sessionDescription);
     }).then(function() {
       console.log('setLocalDescription() success in promise');
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
       if (!useVanilla) {
-        sendSdp(peerConnection.localDescription);
+        sendSdp(id, peerConnection.localDescription);
       }
     }).catch(function(err) {
       console.error(err);
     });
   }
 
-  function setAnswer(sessionDescription) {
-    if (! peerConnection) {
+  function setAnswer(id, sessionDescription) {
+    let peerConnection = getConnection(id);
+    if (!peerConnection) {
       console.error('peerConnection NOT exist!');
       return;
     }
     peerConnection.setRemoteDescription(sessionDescription)
     .then(function() {
-      console.log('setRemoteDescription(answer) succsess in promise');
+      console.log('setRemoteDescription(answer) success in promise');
     }).catch(function(err) {
       console.error('setRemoteDescription(answer) ERROR: ', err);
     });
+  }
+
+  function addIceCandidate(id, candidate) {
+    let peerConnection = getConnection(id);
+    if (peerConnection) {
+      peerConnection.addIceCandidate(candidate);
+    }
+    else {
+      console.error('PeerConnection not exist!');
+      return;
+    }
+  }
+
+  function sendIceCandidate(id, candidate) {
+    console.log('---sending ICE candidate ---');
+    let obj = { type: 'candidate', ice: JSON.stringify(candidate) };
+    let message = JSON.stringify(obj);
+    console.log('sending candidate=' + message);
+    emitTo(id, obj);
   }
 
   function init() {
@@ -449,9 +804,6 @@
 
   function activateVanilla(checkbox) {
     useVanilla = checkbox.checked;
-  }
-  function test() {
-    alert('change!');
   }
 
   function guessImageMime(data){
@@ -544,13 +896,14 @@
 
   // 自分が投稿
   function postContents() {
-    let data = [];
-    // shutout over 3peer
-    if (! peerConnection) {
-      console.error('peerConnection NOT exist!');
-      alert('please post after connected.')
-      return;
-    }
+    // FIXME: impl function.
+    //let fromId = getMySpouseId();
+    //let peerConnection = getConnection(fromId);
+    //if (! peerConnection) {
+    //  console.error('peerConnection NOT exist!');
+    //  alert('please post after connected.')
+    //  return;
+    //}
     let posting = postingContents.value;
     if (!posting && !blob) {
       alert('投稿には文字または画像が必須です。');
@@ -602,27 +955,38 @@
 
   // start PeerConnection
   function connect() {
-    if (! peerConnection) {
-      console.log('make Offer');
-      makeOffer();
+    //if (!isReadyToConnect()) {
+    //  console.warn('NOT READY to connect');
+    //}
+    //else if (!canConnectMore()) {
+    if (!canConnectMore()) {
+      console.log('TOO MANY connections');
     }
     else {
-      console.warn('peer already exist.');
+      callMe();
     }
   }
 
   // close PeerConnection
   function hangUp() {
-    if (peerConnection) {
-      console.log('Hang up.');
-      peerConnection.close();
-      peerConnection = null;
-      //pauseVideo(remoteVideo);
+    emitRoom({ type: 'bye' });  
+    clearMessage(); // clear firebase
+    stopAllConnection();
+  }
+
+  // ---- multi party --
+  function callMe() {
+    emitRoom({type: 'call me'});
+  }
+
+  function _assert(desc, v) {
+    if (v) {
+      return;
     }
     else {
-      console.warn('peer NOT exist.');
+      let caller = _assert.caller || 'Top level';
+      console.error('ASSERT in %s, %s is :', caller, desc, v);
     }
   }
 </script>
 </html>
-
