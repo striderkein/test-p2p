@@ -315,10 +315,26 @@
   }
 
   /**
+   * @param {string} couplingId coupling ID
+   * @return {string|null} roomName
+   */
+  function getRoomNameBy(couplingId) {
+    var roomName = null;
+    var data = [
+      { coupling_id: "hoge", room_name: "room_A" },
+      { coupling_id: "fuga", room_name: "room_B" }
+    ]
+    data.find(d => {
+      if (d.coupling_id === couplingId) {
+        roomName = d.room_name;
+      }
+    });
+    return roomName;
+  }
+
   /**
    * @return {array<member>} member object array
    */
-  function getRoomNameBy(memberId) {
   function getMembers() {
     // TODO: get from DB?
     let members = [
