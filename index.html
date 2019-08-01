@@ -278,7 +278,11 @@
   }
   // ----- use firebase.io ---- //
 
+  /**
+   * _direct_/MY_CLIENT_ID オブジェクトを削除する。
+   */
   function clearMessage() {
+    // 空オブジェクトを set することで、対象オブジェクトを削除する。
     clientRef.set({});
   }
 
