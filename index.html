@@ -184,7 +184,6 @@
 
     let key = database.ref(databaseRoot + room + '/_join_').push({ joined : 'unknown'}).key
     clientId = 'member_' + key;
-    //clientId = 'member_-LkcOfB_lVUMXNyTJAvj';
     console.log('joined to room=' + room + ' as clientId=' + clientId);
     database.ref(databaseRoot + room + '/_join_/' + key).update({ joined : clientId});
 
@@ -670,10 +669,10 @@
     peer.onconnectionstatechange = function() {
       console.log('==***== connection state=' + peer.connectionState);
     };
-    peer.onremovestream = function(event) {
-      console.log('-- peer.onremovestream()');
-      pauseVideo(remoteVideo);
-    };
+    //peer.onremovestream = function(event) {
+    //  console.log('-- peer.onremovestream()');
+    //  pauseVideo(remoteVideo);
+    //};
  
     // -- add local stream --
     //if (localStream) {
