@@ -23,6 +23,9 @@
     </div>
   </div>
   <div id="after_login">
+    <div>
+      <p>you logined as... <span id="logined_user"></span></p>
+    </div>
     <button type="button" onclick="connect();">Connect</button>
     <button type="button" onclick="postContents();">Post</button>
     <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
@@ -59,7 +62,7 @@
   let peerConnections = [];
   //let remoteStreams = [];
   //let remoteVideos = [];
-  const MAX_CONNECTION_COUNT = 3;
+  const MAX_CONNECTION_COUNT = 1;
 
   var file = null; // 選択されるファイル
   var blob = null; // 画像(BLOBデータ)
@@ -71,6 +74,8 @@
   let dataChannel = null;
   let remoteDataChannel = null;
   let peerConnection = null;
+  let memberId = document.getElementById('member_id');
+  // let members = document.getElementById('members');
   let postedContents = document.getElementById('posted_contents');
   let postingContents = document.getElementById('posting_contents');
   let textForSendSdp = document.getElementById('text_for_send_sdp');
@@ -164,6 +169,7 @@
         //getMemberNamesFrom(room);
         joinRoom(room);
         setRoomLink(room);
+        $('#logined_user').text(member.name);
 
         $('#login-modal').fadeOut();
       }
@@ -178,7 +184,6 @@
 
     let key = database.ref(databaseRoot + room + '/_join_').push({ joined : 'unknown'}).key
     clientId = 'member_' + key;
-    //clientId = 'member_-LkcOfB_lVUMXNyTJAvj';
     console.log('joined to room=' + room + ' as clientId=' + clientId);
     database.ref(databaseRoot + room + '/_join_/' + key).update({ joined : clientId});
 
@@ -273,21 +278,11 @@
   }
   // ----- use firebase.io ---- //
 
-  // --- broadcast message to all members in room
-  function emitRoom(msg) {
-    msg.from = clientId;
-    // NOTE:_broadcast_ 配下に `child_added` される
-    roomBroadcastRef.push(msg);
-  }
-
-  function emitTo(id, msg) {
-    console.log('===== sending from=' + clientId + ' ,  to=' + id);
-    msg.from = clientId;
-    // NOTE: ここで `child_added` イベントが発火する
-    database.ref(databaseRoot + room + '/_direct_/' + id).push(msg);
-  }
-
+  /**
+   * _direct_/MY_CLIENT_ID オブジェクトを削除する。
+   */
   function clearMessage() {
+    // 空オブジェクトを set することで、対象オブジェクトを削除する。
     clientRef.set({});
   }
 
@@ -334,10 +329,10 @@
   function getMembers() {
     // TODO: get from DB?
     let members = [
-      { mail: "taro@hoge.com", pass: "taro", coupling_id: "A", room: "room_A" },
-      { mail: "hanako@hoge.com", pass: "hanako", coupling_id: "A", room: "room_A" },
-      { mail: "jiro@fuga.com", pass: "jiro", coupling_id: "B", room: "room_B" },
-      { mail: "tamako@fuga.com", pass: "tamako", coupling_id: "B", room: "room_B" }
+      { name: "taro", mail: "taro@hoge.com", pass: "taro", coupling_id: "A", room: "room_A" },
+      { name: "hanako", mail: "hanako@hoge.com", pass: "hanako", coupling_id: "A", room: "room_A" },
+      { name: "jiro", mail: "jiro@fuga.com", pass: "jiro", coupling_id: "B", room: "room_B" },
+      { name: "tamako", mail: "tamako@fuga.com", pass: "tamako", coupling_id: "B", room: "room_B" }
     ]
     return members;
   }
@@ -531,18 +526,6 @@
   //  textToReceiveSdp.value ='';
   //}
  
-  function sendSdp(id, sessionDescription) {
-    console.log('---sending sdp ---');
-    textForSendSdp.value = sessionDescription.sdp;
-    /*---
-    textForSendSdp.focus();
-    textForSendSdp.select();
-    ----*/
-    let message = { type: sessionDescription.type, sdp: sessionDescription.sdp };
-    console.log('sending SDP=' + message);
-    emitTo(id, message);
-  }
-
   // ---------------------- connection handling -----------------------
   /**
    * @return {RTCPeerConection} peer RTCPeerConnection object
@@ -664,10 +647,10 @@
     peer.onconnectionstatechange = function() {
       console.log('==***== connection state=' + peer.connectionState);
     };
-    peer.onremovestream = function(event) {
-      console.log('-- peer.onremovestream()');
-      pauseVideo(remoteVideo);
-    };
+    //peer.onremovestream = function(event) {
+    //  console.log('-- peer.onremovestream()');
+    //  pauseVideo(remoteVideo);
+    //};
  
     // -- add local stream --
     //if (localStream) {
@@ -751,6 +734,18 @@
     }).catch(function(err) {
       console.error('setRemoteDescription(answer) ERROR: ', err);
     });
+  }
+
+  function sendSdp(id, sessionDescription) {
+    console.log('---sending sdp ---');
+    textForSendSdp.value = sessionDescription.sdp;
+    /*---
+    textForSendSdp.focus();
+    textForSendSdp.select();
+    ----*/
+    let message = { type: sessionDescription.type, sdp: sessionDescription.sdp };
+    console.log('sending SDP=' + message);
+    emitTo(id, message);
   }
 
   function addIceCandidate(id, candidate) {
@@ -963,16 +958,35 @@
     }
   }
 
+  // ---- multi party --
+  function callMe() {
+    emitRoom({type: 'call me'});
+  }
+
+  // --- broadcast message to all members in room
+  function emitRoom(msg) {
+    msg.from = clientId;
+    // NOTE:_broadcast_ 配下に `child_added` される
+    roomBroadcastRef.push(msg);
+  }
+
+  /**
+   * _direct_ の下に SDP, ICE candidate オブジェクトを作成する。
+   * @param {string} id 送信先となる相手のメンバーID
+   * @param {object} msg SDP または ICE candidate を含むメッセージオブジェクト
+   */
+  function emitTo(id, msg) {
+    console.log('===== sending from=' + clientId + ' ,  to=' + id);
+    msg.from = clientId;
+    // NOTE: ここで `child_added` イベントが発火する
+    database.ref(databaseRoot + room + '/_direct_/' + id).push(msg);
+  }
+
   // close PeerConnection
   function hangUp() {
     emitRoom({ type: 'bye' });  
     clearMessage(); // clear firebase
     stopAllConnection();
-  }
-
-  // ---- multi party --
-  function callMe() {
-    emitRoom({type: 'call me'});
   }
 
   function _assert(desc, v) {
