@@ -3,25 +3,14 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <link rel="stylesheet" type="text/css" href="./style/main.css">
+  <script src="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" />
   <title>NINKATSU</title>
 </head>
 <body onload="init()">
   NINKATSU<br />
-  <div class="login-modal-wrapper" id="login-modal">
-    <div class="modal">
-      <div id="close-modal">
-        <i class="fa fa-2x fa-times"></i>
-      </div>
-      <div id="login-form">
-        <h2>NINKATSU ログイン</h2>
-        <!-- <form action="#"> -->
-          <input id="mail_address" class="form-control" type="text" placeholder="メールアドレス">
-          <input id="password" class="form-control" type="password" placeholder="パスワード">
-          <button id="submit-btn" type="button" onclick="login();">ログイン</div>
-        <!-- </form> -->
-      </div>
-    </div>
-  </div>
+  <div id="firebaseui-auth-container"></div>
+  <div id="loader">Loading...</div>
   <div id="after_login">
     <div>
       <p>you logined as... <span id="logined_user"></span></p>
@@ -29,7 +18,8 @@
     <button type="button" onclick="connect();">Connect</button>
     <button type="button" onclick="postContents();">Post</button>
     <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
-    <button type="button" onclick="hangUp();">Hang Up</button> 
+    <button type="button" onclick="hangUp();">Hang Up</button>
+    <button type="button" onclick="signOut();">Sign Out</button>
     <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
     <a id="room_link" href="" target="_blank">Open another window (link to this room)</a>
     <div>
@@ -56,8 +46,64 @@
 <!-- The core Firebase JS SDK is always required and must be listed first -->
 <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-auth.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-<script type="text/javascript">
+<script>
+  // ----- use firebase.io ----
+  const dataDebugFlag = false;
+  // Initialize Firebase
+  // Your web app's Firebase configuration
+  var firebaseConfig = {
+    apiKey: "AIzaSyC1OBg2dia_Gjca39qnhGJOugcqXI2RtQ4",
+    authDomain: "ninkatsu-sig-fire.firebaseapp.com",
+    databaseURL: "https://ninkatsu-sig-fire.firebaseio.com",
+    projectId: "ninkatsu-sig-fire",
+    storageBucket: "",
+    messagingSenderId: "706754252656",
+    appId: "1:706754252656:web:ba1736c22779caa1"
+  };
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  let databaseRoot = 'ninkatsu-p2p/multi/'; // <--- plaase set your database root for signaling
+  //let databaseRoot = 'ninkatsu-p2p/'; // <--- plaase set your database root for signaling
+  let database = firebase.database();
+  let firebaseAuth = firebase.auth();
+  // Initialize the FirebaseUI Widget using Firebase.
+  var ui = new firebaseui.auth.AuthUI(firebaseAuth);
+  var uiConfig = {
+    callbacks: {
+      signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+        // return true;
+        console.log('authResult: %s, redirectUrl: %s', authResult, redirectUrl)
+        login();
+      },
+      uiShown: function() {
+        document.getElementById('loader').style.display = 'none';
+      }
+    },
+    signInFlow: 'popup',
+    // signInSuccessUrl: './success.html',
+    signInSuccessUrl: './index.html',
+    signInOptions: [
+      firebase.auth.EmailAuthProvider.PROVIDER_ID,
+    ],
+  };
+
+  firebaseAuth.onAuthStateChanged(function(user){
+    if (user) {
+      // サインインした・している
+      console.log('sign in');
+      $('#loader').hide();
+      login();
+    } else {
+      // サインアウトした・サインインしていない
+      console.log('NOT sign in');
+      ui.start('#firebaseui-auth-container', uiConfig);
+      $('#after_login').hide();
+      $('#firebaseui-auth-container').show();
+    }
+  });
+
   // ---- for multi party -----
   let peerConnections = [];
   //let remoteStreams = [];
@@ -129,25 +175,6 @@
   //  }
   //};
 
-  // ----- use firebase.io ----
-  // impl here.
-  const dataDebugFlag = false;
-  // Initialize Firebase
-  // Your web app's Firebase configuration
-  var firebaseConfig = {
-    apiKey: "AIzaSyC1OBg2dia_Gjca39qnhGJOugcqXI2RtQ4",
-    authDomain: "ninkatsu-sig-fire.firebaseapp.com",
-    databaseURL: "https://ninkatsu-sig-fire.firebaseio.com",
-    projectId: "ninkatsu-sig-fire",
-    storageBucket: "",
-    messagingSenderId: "706754252656",
-    appId: "1:706754252656:web:ba1736c22779caa1"
-  };
-  let databaseRoot = 'ninkatsu-p2p/multi/'; // <--- plaase set your database root for signaling
-  //let databaseRoot = 'ninkatsu-p2p/'; // <--- plaase set your database root for signaling
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  let database = firebase.database();
   let roomBroadcastRef;
   let clientRef;
   let clientId;
@@ -155,26 +182,37 @@
 
   let room = null;
 
+  //function login() {
+  //  var logined = false;
+  //  let members = getMembers();
+  //  members.some(member => {
+  //    if (member.mail === $('#mail_address').val() && member.pass === $('#password').val()) {
+  //      logined = true;
+  //      console.log('login succeeded');
+  //
+  //      //let room = getRoomName();
+  //      room = member.room;
+  //      //let roomName = getRoomNameBy('fuga');
+  //      //getMemberNamesFrom(room);
+  //      joinRoom(room);
+  //      setRoomLink(room);
+  //      $('#logined_user').text(member.name);
+  //
+  //      $('#login-modal').fadeOut();
+  //    }
+  //  });
+  //  if (!logined) alert('failed');
+  //}
+
   function login() {
-    var logined = false;
-    let members = getMembers();
-    members.some(member => {
-      if (member.mail === $('#mail_address').val() && member.pass === $('#password').val()) {
-        logined = true;
-        console.log('login succeeded');
-
-        //let room = getRoomName();
-        room = member.room;
-        //let roomName = getRoomNameBy('fuga');
-        //getMemberNamesFrom(room);
-        joinRoom(room);
-        setRoomLink(room);
-        $('#logined_user').text(member.name);
-
-        $('#login-modal').fadeOut();
-      }
-    });
-    if (!logined) alert('failed');
+    var user = firebaseAuth.currentUser;
+    // room = member.room;
+    // joinRoom(room);
+    // setRoomLink(room);
+    // $('#logined_user').text(authResult.user.email);
+    $('#logined_user').text(user.displayName || user.email);
+    $('#firebaseui-auth-container').fadeOut();
+    $('#after_login').slideDown('slow');
   }
   /**
    * @param {string} room room name.
@@ -774,6 +812,7 @@
     console.log('data restored.');
     // need to get localstream
     //startVideo();
+    $('#after_login').hide();
   }
 
   /**
@@ -987,6 +1026,15 @@
     emitRoom({ type: 'bye' });  
     clearMessage(); // clear firebase
     stopAllConnection();
+  }
+
+  function signOut() {
+    firebaseAuth.signOut().then(() =>{
+      console.log('sign out.');
+    })
+    .catch((error) => {
+      console.log(`error occured when sign out: ${error}`);
+    });
   }
 
   function _assert(desc, v) {
