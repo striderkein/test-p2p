@@ -131,49 +131,6 @@
                             navigator.mozGetUserMedia || navigator.msGetUserMedia;
   RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
   RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
-  // -------- websocket ----
-  // please use node.js app
-  //  
-  // or you can use chrome app (only work with Chrome)
-  //  https://chrome.google.com/webstore/detail/simple-message-server/bihajhgkmpfnmbmdnobjcdhagncbkmmp
-  //
-  //let wsUrl = 'wss://ninkatsu-sig.ga:3001/';
-  //let ws = new WebSocket(wsUrl);
-  //ws.onopen = function(evt) {
-  //  console.log('ws open()');
-  //};
-  //ws.onerror = function(err) {
-  //  console.error('ws onerror() ERR:', err);
-  //};
-  //ws.onmessage = function(evt) {
-  //  console.log('ws onmessage() data:', evt.data);
-  //  let message = JSON.parse(evt.data);
-  //  if (message.type === 'offer') {
-  //    // -- got offer ---
-  //    console.log('Received offer ...');
-  //    textToReceiveSdp.value = message.sdp;
-  //    let offer = new RTCSessionDescription(message);
-  //    setOffer(offer);
-  //  }
-  //  else if (message.type === 'answer') {
-  //    // --- got answer ---
-  //    console.log('Received answer ...');
-  //    textToReceiveSdp.value = message.sdp;
-  //    let answer = new RTCSessionDescription(message);
-  //    setAnswer(answer);
-  //  }
-  //  else if (message.type === 'candidate') {
-  //    // --- got ICE candidate ---
-  //    console.log('Received ICE candidate ...');
-  //    let candidate = new RTCIceCandidate(message.ice);
-  //    console.log(candidate);
-  //    addIceCandidate(candidate);
-  //  }
-  //  else {
-  //    console.error('unknown message-type!');
-  //  }
-  //};
-
   let roomBroadcastRef;
   let clientRef;
   let clientId;
