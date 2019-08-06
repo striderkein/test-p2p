@@ -47,21 +47,8 @@
 <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-auth.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<script src="./scripts/firebase-init.js"></script>
 <script>
-  // ----- use firebase.io ----
-  // Initialize Firebase
-  // Your web app's Firebase configuration
-  var firebaseConfig = {
-    apiKey: "AIzaSyC1OBg2dia_Gjca39qnhGJOugcqXI2RtQ4",
-    authDomain: "ninkatsu-sig-fire.firebaseapp.com",
-    databaseURL: "https://ninkatsu-sig-fire.firebaseio.com",
-    projectId: "ninkatsu-sig-fire",
-    storageBucket: "",
-    messagingSenderId: "706754252656",
-    appId: "1:706754252656:web:ba1736c22779caa1"
-  };
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
   let databaseRoot = 'ninkatsu-p2p/multi/'; // <--- plaase set your database root for signaling
   //let databaseRoot = 'ninkatsu-p2p/'; // <--- plaase set your database root for signaling
   let database = firebase.database();
