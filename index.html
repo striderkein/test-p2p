@@ -70,7 +70,10 @@
     // signInSuccessUrl: './success.html',
     signInSuccessUrl: './index.html',
     signInOptions: [
-      firebase.auth.EmailAuthProvider.PROVIDER_ID,
+      {
+        provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+        // requireDisplayName: false // default true
+      }
     ],
   };
 
