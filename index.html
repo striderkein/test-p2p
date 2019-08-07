@@ -54,8 +54,8 @@
   let database = firebase.database();
   let firebaseAuth = firebase.auth();
   // Initialize the FirebaseUI Widget using Firebase.
-  var ui = new firebaseui.auth.AuthUI(firebaseAuth);
-  var uiConfig = {
+  let ui = new firebaseui.auth.AuthUI(firebaseAuth);
+  let uiConfig = {
     callbacks: {
       signInSuccessWithAuthResult: function(authResult, redirectUrl) {
         // return true;
