@@ -164,7 +164,7 @@
   function joinRoom(room) {
     console.log('join room name = ' + room);
 
-    let key = database.ref(databaseRoot + room + '/_join_').push({ joined : 'unknown'}).key
+    let key = database.ref(databaseRoot + room + '/_join_').push({ joined : 'unknown'}).key;
     clientId = 'member_' + key;
     console.log('joined to room=' + room + ' as clientId=' + clientId);
     database.ref(databaseRoot + room + '/_join_/' + key).update({ joined : clientId});
