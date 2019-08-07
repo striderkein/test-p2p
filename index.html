@@ -151,6 +151,15 @@
 
   function login() {
     var user = firebaseAuth.currentUser;
+    // for DEBUG
+    //user.getIdToken(/* forceRefresh */ true).then(function(idToken) {
+    //  // Send token to your backend via HTTPS
+    //  // ...
+    //  console.info(`idToken: ${idToken}`);
+    //}).catch(function(error) {
+    //  // Handle error
+    //  console.log(`error occured when get ID token: ${error}`);
+    //});
     // まずユーザアカウントの有無をチェック。
     existsGopreAccount()
     .then(getRoomName, signUp);
