@@ -149,6 +149,9 @@
 
   function login() {
     var user = firebaseAuth.currentUser;
+    // まずユーザアカウントの有無をチェック。
+    existsGopreAccount()
+    .then(getRoomName, signUp);
     // room = member.room;
     // joinRoom(room);
     // setRoomLink(room);
@@ -158,6 +161,52 @@
     $('#after_login').slideDown('slow');
   }
 
+  function existsGopreAccount() {
+    return new Promise(function(resolve, reject) {
+      var ref = database.ref(databaseRoot + '/member');
+      // Attach an asynchronous callback to read the data at our posts reference
+      ref.orderByChild('uid').equalTo(firebaseAuth.currentUser.uid).on('value', function(snapshot) {
+        if (snapshot.numChildren() === 1) {
+          // EXIST
+          resolve();
+        } else if (snapshot.numChildren() > 1) {
+          console.error('too much account');
+        }
+        console.log(snapshot.val());
+        reject();
+        return;
+      }, function (errorObject) {
+        console.log('The read failed: ' + errorObject.code);
+        reject();
+        return;
+      });
+    });
+  }
+
+  function signUp() {
+    var user = firebaseAuth.currentUser;
+    console.log(`uid is: ${user.uid}`);
+    //var ref = database.ref(databaseRoot + '/member');
+    //// Attach an asynchronous callback to read the data at our posts reference
+    //ref.on('value', function(snapshot) {
+    //  console.log('snapshot.val: %O', snapshot.val());
+    //  //members.value += snapshot.val() + '\n';
+    //}, function (errorObject) {
+    //  console.log('The read failed: ' + errorObject.code);
+    //});
+    // create new room
+    let roomName = database.ref(databaseRoot + '/room').push().key;
+    //database.ref(databaseRoot + '/room' + '/' + roomName).child('members').push({ [user.uid] : true });
+    database.ref(databaseRoot + '/room' + '/' + roomName).child('members').set({ [user.uid] : true });
+    let name = user.displayName === null ? '' : user.displayName;
+    let key = database.ref(databaseRoot + '/member').push({
+      uid : user.uid,
+      name : name,
+      rooms : roomName,
+    }).key;
+    database.ref(databaseRoot + '/member' + '/' + key).child('rooms').set({ [roomName] : true });
+    console.info(`key is: ${key}`);
+  }
   /**
    * @param {string} room room name.
    */
