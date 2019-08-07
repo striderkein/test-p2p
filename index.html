@@ -163,10 +163,6 @@
     // まずユーザアカウントの有無をチェック。
     existsGopreAccount()
     .then(getRoomName, signUp);
-    // room = member.room;
-    // joinRoom(room);
-    // setRoomLink(room);
-    // $('#logined_user').text(authResult.user.email);
     $('#logined_user').text(user.displayName || user.email);
     $('#firebaseui-auth-container').fadeOut();
     $('#after_login').slideDown('slow');
