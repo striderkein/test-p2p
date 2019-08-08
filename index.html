@@ -127,28 +127,6 @@
   let clientId;
   let room = null;
 
-  //function login() {
-  //  var logined = false;
-  //  let members = getMembers();
-  //  members.some(member => {
-  //    if (member.mail === $('#mail_address').val() && member.pass === $('#password').val()) {
-  //      logined = true;
-  //      console.log('login succeeded');
-  //
-  //      //let room = getRoomName();
-  //      room = member.room;
-  //      //let roomName = getRoomNameBy('fuga');
-  //      //getMemberNamesFrom(room);
-  //      joinRoom(room);
-  //      setRoomLink(room);
-  //      $('#logined_user').text(member.name);
-  //
-  //      $('#login-modal').fadeOut();
-  //    }
-  //  });
-  //  if (!logined) alert('failed');
-  //}
-
   function login() {
     var user = firebaseAuth.currentUser;
     // for DEBUG
