@@ -3,25 +3,14 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
   <link rel="stylesheet" type="text/css" href="./style/main.css">
+  <script src="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.js"></script>
+  <link type="text/css" rel="stylesheet" href="https://cdn.firebase.com/libs/firebaseui/3.5.2/firebaseui.css" />
   <title>NINKATSU</title>
 </head>
 <body onload="init()">
   NINKATSU<br />
-  <div class="login-modal-wrapper" id="login-modal">
-    <div class="modal">
-      <div id="close-modal">
-        <i class="fa fa-2x fa-times"></i>
-      </div>
-      <div id="login-form">
-        <h2>NINKATSU ログイン</h2>
-        <!-- <form action="#"> -->
-          <input id="mail_address" class="form-control" type="text" placeholder="メールアドレス">
-          <input id="password" class="form-control" type="password" placeholder="パスワード">
-          <button id="submit-btn" type="button" onclick="login();">ログイン</div>
-        <!-- </form> -->
-      </div>
-    </div>
-  </div>
+  <div id="firebaseui-auth-container"></div>
+  <div id="loader">Loading...</div>
   <div id="after_login">
     <div>
       <p>you logined as... <span id="logined_user"></span></p>
@@ -29,7 +18,8 @@
     <button type="button" onclick="connect();">Connect</button>
     <button type="button" onclick="postContents();">Post</button>
     <button type="button" onclick="clearLocalstorage();">clear localstorage</button>
-    <button type="button" onclick="hangUp();">Hang Up</button> 
+    <button type="button" onclick="hangUp();">Hang Up</button>
+    <button type="button" onclick="signOut();">Sign Out</button>
     <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
     <a id="room_link" href="" target="_blank">Open another window (link to this room)</a>
     <div>
@@ -56,8 +46,51 @@
 <!-- The core Firebase JS SDK is always required and must be listed first -->
 <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-database.js"></script>
+<script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-auth.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
-<script type="text/javascript">
+<script src="./scripts/init-firebase.js"></script>
+<script>
+  let databaseRoot = 'ninkatsu-p2p/multi/'; // <--- plaase set your database root for signaling
+  //let databaseRoot = 'ninkatsu-p2p/'; // <--- plaase set your database root for signaling
+  let database = firebase.database();
+  let firebaseAuth = firebase.auth();
+  // Initialize the FirebaseUI Widget using Firebase.
+  let ui = new firebaseui.auth.AuthUI(firebaseAuth);
+  let uiConfig = {
+    callbacks: {
+      signInSuccessWithAuthResult: function(authResult, redirectUrl) {
+        console.log('authResult: %s, redirectUrl: %s', authResult, redirectUrl)
+      },
+      uiShown: function() {
+        document.getElementById('loader').style.display = 'none';
+      }
+    },
+    signInFlow: 'popup',
+    // signInSuccessUrl: './success.html',
+    signInSuccessUrl: './index.html',
+    signInOptions: [
+      {
+        provider: firebase.auth.EmailAuthProvider.PROVIDER_ID,
+        // requireDisplayName: false // default true
+      }
+    ],
+  };
+
+  firebaseAuth.onAuthStateChanged(function(user){
+    if (user) {
+      // サインインした・している
+      console.log('sign in');
+      $('#loader').hide();
+      login();
+    } else {
+      // サインアウトした・サインインしていない
+      console.log('NOT sign in');
+      ui.start('#firebaseui-auth-container', uiConfig);
+      $('#after_login').hide();
+      $('#firebaseui-auth-container').show();
+    }
+  });
+
   // ---- for multi party -----
   let peerConnections = [];
   //let remoteStreams = [];
@@ -86,116 +119,102 @@
                             navigator.mozGetUserMedia || navigator.msGetUserMedia;
   RTCPeerConnection = window.RTCPeerConnection || window.webkitRTCPeerConnection || window.mozRTCPeerConnection;
   RTCSessionDescription = window.RTCSessionDescription || window.webkitRTCSessionDescription || window.mozRTCSessionDescription;
-  // -------- websocket ----
-  // please use node.js app
-  //  
-  // or you can use chrome app (only work with Chrome)
-  //  https://chrome.google.com/webstore/detail/simple-message-server/bihajhgkmpfnmbmdnobjcdhagncbkmmp
-  //
-  //let wsUrl = 'wss://ninkatsu-sig.ga:3001/';
-  //let ws = new WebSocket(wsUrl);
-  //ws.onopen = function(evt) {
-  //  console.log('ws open()');
-  //};
-  //ws.onerror = function(err) {
-  //  console.error('ws onerror() ERR:', err);
-  //};
-  //ws.onmessage = function(evt) {
-  //  console.log('ws onmessage() data:', evt.data);
-  //  let message = JSON.parse(evt.data);
-  //  if (message.type === 'offer') {
-  //    // -- got offer ---
-  //    console.log('Received offer ...');
-  //    textToReceiveSdp.value = message.sdp;
-  //    let offer = new RTCSessionDescription(message);
-  //    setOffer(offer);
-  //  }
-  //  else if (message.type === 'answer') {
-  //    // --- got answer ---
-  //    console.log('Received answer ...');
-  //    textToReceiveSdp.value = message.sdp;
-  //    let answer = new RTCSessionDescription(message);
-  //    setAnswer(answer);
-  //  }
-  //  else if (message.type === 'candidate') {
-  //    // --- got ICE candidate ---
-  //    console.log('Received ICE candidate ...');
-  //    let candidate = new RTCIceCandidate(message.ice);
-  //    console.log(candidate);
-  //    addIceCandidate(candidate);
-  //  }
-  //  else {
-  //    console.error('unknown message-type!');
-  //  }
-  //};
-
-  // ----- use firebase.io ----
-  // impl here.
-  const dataDebugFlag = false;
-  // Initialize Firebase
-  // Your web app's Firebase configuration
-  var firebaseConfig = {
-    apiKey: "AIzaSyC1OBg2dia_Gjca39qnhGJOugcqXI2RtQ4",
-    authDomain: "ninkatsu-sig-fire.firebaseapp.com",
-    databaseURL: "https://ninkatsu-sig-fire.firebaseio.com",
-    projectId: "ninkatsu-sig-fire",
-    storageBucket: "",
-    messagingSenderId: "706754252656",
-    appId: "1:706754252656:web:ba1736c22779caa1"
-  };
-  let databaseRoot = 'ninkatsu-p2p/multi/'; // <--- plaase set your database root for signaling
-  //let databaseRoot = 'ninkatsu-p2p/'; // <--- plaase set your database root for signaling
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  let database = firebase.database();
   let roomBroadcastRef;
   let clientRef;
   let clientId;
-  //let fromId;
-
   let room = null;
+  let passedRoomName = getRoomNameFromURL();
 
   function login() {
-    var logined = false;
-    let members = getMembers();
-    members.some(member => {
-      if (member.mail === $('#mail_address').val() && member.pass === $('#password').val()) {
-        logined = true;
-        console.log('login succeeded');
+    var user = firebaseAuth.currentUser;
+    // for DEBUG
+    //user.getIdToken(/* forceRefresh */ true).then(function(idToken) {
+    //  // Send token to your backend via HTTPS
+    //  // ...
+    //  console.info(`idToken: ${idToken}`);
+    //}).catch(function(error) {
+    //  // Handle error
+    //  console.log(`error occured when get ID token: ${error}`);
+    //});
+    console.log(`uid is: ${user.uid}`);
 
-        //let room = getRoomName();
-        room = member.room;
-        //let roomName = getRoomNameBy('fuga');
-        //getMemberNamesFrom(room);
-        joinRoom(room);
-        setRoomLink(room);
-        $('#logined_user').text(member.name);
-
-        $('#login-modal').fadeOut();
-      }
+    // ユーザアカウントの有無をチェック。
+    existsGopreAccount()
+    //.then(accountExists => signUp(accountExists))
+    .then(null, signUp)
+    //.then(result => getRoomName(result))
+    .then(getRoomName, null)
+    //.then(joinRoom, debugFail);
+    .then(roomName => joinRoom(roomName))
+    .catch(error => function(error) {
+      console.error(error);
     });
-    if (!logined) alert('failed');
+
+    $('#logined_user').text(user.displayName || user.email);
+    $('#firebaseui-auth-container').fadeOut();
+    $('#after_login').slideDown('slow');
   }
+
+  // for DEBUG
+  function debugSuccess(arg) {
+    console.log(`success callback: ${arg}`);
+  }
+
+  // for DEBUG
+  function debugFail(arg) {
+    console.log(`failure callback: ${arg}`);
+  }
+
+  function existsGopreAccount() {
+    return new Promise(function(resolve, reject) {
+      var ref = database.ref(databaseRoot + '/member');
+      // Attach an asynchronous callback to read the data at our posts reference
+      ref.once('value', function(snapshot) {
+        if (snapshot.hasChild(firebaseAuth.currentUser.uid)) {
+          console.log('account exists!');
+          resolve();
+        } else {
+          reject();
+          return;
+        }
+      });
+    });
+  }
+
+  function signUp() {
+    return new Promise(function(resolve, reject) {
+      let myRoom = null;
+      let user = firebaseAuth.currentUser;
+      console.log(`uid is: ${user.uid}`);
+      // if not invited, room is blank string.
+      //database.ref(databaseRoot + '/room/' + room).child('members/' + user.uid).set(true);
+      // NOTE: 下記の理由から、null ならば空文字を投入する。
+      // - displayName は任意入力パラメータであり、未入力の場合は null となる
+      // - Firebase Realtime Database には null は投入できない
+      let name = user.displayName === null ? '' : user.displayName;
+      database.ref(databaseRoot + '/member/' + user.uid).set({
+        name : name,
+      });
+      resolve();
+    });
+  }
+
   /**
    * @param {string} room room name.
    */
   function joinRoom(room) {
     console.log('join room name = ' + room);
-
-    let key = database.ref(databaseRoot + room + '/_join_').push({ joined : 'unknown'}).key
-    clientId = 'member_' + key;
+    let key = database.ref(databaseRoot + '/room/' + room + '/_join_').push({ joined : 'unknown'}).key;
+    database.ref(databaseRoot + '/room/' + room + '/_join_').on('value', function(snapshot) {
+      console.log(snapshot.val());
+    });
+    //clientId = 'member_' + key;
+    clientId = firebaseAuth.currentUser.uid;
     console.log('joined to room=' + room + ' as clientId=' + clientId);
-    database.ref(databaseRoot + room + '/_join_/' + key).update({ joined : clientId});
+    database.ref(databaseRoot + '/room/' + room + '/_join_/' + key).update({ joined : clientId});
 
-    // remove join object
-    //if (! dataDebugFlag) {
-    //  let joinRef =  database.ref(databaseRoot + room + '/_join_/' + key);
-    //  joinRef.remove();
-    //}
-
-    roomBroadcastRef = database.ref(databaseRoot + room + '/_broadcast_');
+    roomBroadcastRef = database.ref(databaseRoot + '/room/' + room + '/_broadcast_');
     roomBroadcastRef.on('child_added', function(data) {
-      //console.log('roomBroadcastRef.on(data) data.key=' + data.key + ', data.val():', data.val());
       let message = data.val();
       let fromId = message.from;
       if (fromId === clientId) {
@@ -229,9 +248,8 @@
       }
     });
 
-    clientRef = database.ref(databaseRoot + room + '/_direct_/' + clientId);
+    clientRef = database.ref(databaseRoot + '/room/' + room + '/_direct_/' + clientId);
     clientRef.on('child_added', function(data) {
-      //console.log('clientRef.on(data)  data.key=' + data.key + ', data.val():', data.val());
       let message = data.val();
       let fromId = message.from;
 
@@ -259,17 +277,13 @@
         console.log(candidate);
         addIceCandidate(fromId, candidate);
       }
-      
-      //if (! dataDebugFlag) {
-      //  // remove direct message
-      //  let messageRef =  database.ref(databaseRoot + room + '/_direct_/' + clientId + '/' + data.key);
-      //  messageRef.remove();
-      //}
     });
+
+    setRoomLink(room);
   }
 
   function setRoomLink(room) {
-    let url = document.location.href;
+    let url = document.location.href + '?' + room;
     let anchorLink = document.getElementById('room_link');
     anchorLink.href = url;
     //let anchorMail = document.getElementById('mail_link');
@@ -287,68 +301,74 @@
   }
 
   // -- room名を取得 --
-  function getRoomName() { // たとえば、 URLに  ?roomname  とする
+  function getRoomNameFromURL() { // たとえば、 URLに  ?roomname  とする
+    let room = null;
     let url = document.location.href;
     let args = url.split('?');
     if (args.length > 1) {
       // ルーム名を指定した場合
-      let room = args[1];
+      room = args[1];
       if (room != '') {
         return room;
       }
     }
     
     // ルーム名を指定しなかった場合
-    // generate random room, and replace URL
-    let room = 'room_' + getUniqueStr(); 
-    window.history.pushState(null, null, 'index.html?' + room);
-    return room;
+    //// generate random room, and replace URL
+    //let room = 'room_' + getUniqueStr(); 
+    //window.history.pushState(null, null, 'index.html?' + room);
+    //return room;
+    return null;
   }
 
   /**
-   * @param {string} couplingId coupling ID
    * @return {string|null} roomName
    */
-  function getRoomNameBy(couplingId) {
-    var roomName = null;
-    var data = [
-      { coupling_id: "hoge", room_name: "room_A" },
-      { coupling_id: "fuga", room_name: "room_B" }
-    ]
-    data.find(d => {
-      if (d.coupling_id === couplingId) {
-        roomName = d.room_name;
+  function getRoomName() {
+    return new Promise(function(resolve, reject) {
+      let user = firebaseAuth.currentUser;
+      //if (accountExists) console.log('account exists!');
+      if (passedRoomName) {
+        room = passedRoomName;
+        resolve(passedRoomName);
+      } else {
+        // create room
+        room = 'room_' + database.ref(databaseRoot + '/room').push().key;
+        database.ref(databaseRoot + '/room/' + room).child('members/' + firebaseAuth.currentUser.uid).set(true);
+        var ref = database.ref(databaseRoot + '/room');
+        // Attach an asynchronous callback to read the data at our posts reference
+        ref.orderByChild('members').once('value', function(snapshot){
+        //ref.orderByChild('members').child(firebaseAuth.currentUser.uid).on('value', function(snapshot) {
+          console.log(`snapshot.val: ${snapshot.val()}`);
+          snapshot.forEach((hogesnap) => {
+            console.log(`hogesnap.val: ${hogesnap.val()}`);
+            console.log(`hogesnap.key: ${hogesnap.key}`);
+            // hogesnap.key is ROOM NAME
+            var rref = database.ref(databaseRoot + '/room/' + hogesnap.key + '/members/' + firebaseAuth.currentUser.uid);
+            rref.orderByKey().equalTo(firebaseAuth.currentUser.uid).once('value', function(fugasnap) {
+            //rref.orderByKey().equalTo('asdfaadfa').on('value', function(fugasnap) {
+            //rref.on('value', function(fugasnap) {
+              console.log(`fugasnap.val: ${fugasnap.val()}`);
+              console.log(`fugasnap.key: ${fugasnap.key}`);
+              if (fugasnap.key  === user.uid) {
+                //return
+                if (!hogesnap.key) {
+                  resolve(hogesnap.key);
+                } else {
+                  database.ref(databaseRoot + '/member/' + user.uid).set({
+                    rooms : { [room] : true },
+                  });
+                  resolve(room);
+                }
+              }
+            })
+          })
+        }, function (errorObject) {
+          console.log('The read failed: ' + errorObject.code);
+          reject();
+          return;
+        });
       }
-    });
-    return roomName;
-  }
-
-  /**
-   * @return {array<member>} member object array
-   */
-  function getMembers() {
-    // TODO: get from DB?
-    let members = [
-      { name: "taro", mail: "taro@hoge.com", pass: "taro", coupling_id: "A", room: "room_A" },
-      { name: "hanako", mail: "hanako@hoge.com", pass: "hanako", coupling_id: "A", room: "room_A" },
-      { name: "jiro", mail: "jiro@fuga.com", pass: "jiro", coupling_id: "B", room: "room_B" },
-      { name: "tamako", mail: "tamako@fuga.com", pass: "tamako", coupling_id: "B", room: "room_B" }
-    ]
-    return members;
-  }
-
-  /**
-   * @param {string} roomName name of room
-   */
-  function getMemberNamesFrom(roomName) {
-    //var ref = db.ref(databaseRoot + 'rooms');
-    var ref = database.ref(databaseRoot + roomName + '/_direct_');
-    // Attach an asynchronous callback to read the data at our posts reference
-    ref.on('value', function(snapshot) {
-      console.log('snapshot.val: %O', snapshot.val());
-      //members.value += snapshot.val() + '\n';
-    }, function (errorObject) {
-      console.log('The read failed: ' + errorObject.code);
     });
   }
 
@@ -503,27 +523,6 @@
   //    }
   //    element.src = '';
   //  }
-  //}
-  //// ----- hand signaling ----
-  //function onSdpText() {
-  //  let text = textToReceiveSdp.value;
-  //  if (peerConnection) {
-  //    console.log('Received answer text...');
-  //    let answer = new RTCSessionDescription({
-  //      type : 'answer',
-  //      sdp : text,
-  //    });
-  //    setAnswer(answer);
-  //  }
-  //  else {
-  //    console.log('Received offer text...');
-  //    let offer = new RTCSessionDescription({
-  //      type : 'offer',
-  //      sdp : text,
-  //    });
-  //    setOffer(offer);
-  //  }
-  //  textToReceiveSdp.value ='';
   //}
  
   // ---------------------- connection handling -----------------------
@@ -715,6 +714,7 @@
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
       if (!useVanilla) {
+        // NOTE: このときの peerConenction.localDescription.type は 'answer'
         sendSdp(id, peerConnection.localDescription);
       }
     }).catch(function(err) {
@@ -774,6 +774,7 @@
     console.log('data restored.');
     // need to get localstream
     //startVideo();
+    $('#after_login').hide();
   }
 
   /**
@@ -979,7 +980,7 @@
     console.log('===== sending from=' + clientId + ' ,  to=' + id);
     msg.from = clientId;
     // NOTE: ここで `child_added` イベントが発火する
-    database.ref(databaseRoot + room + '/_direct_/' + id).push(msg);
+    database.ref(databaseRoot + '/room/' + room + '/_direct_/' + id).push(msg);
   }
 
   // close PeerConnection
@@ -987,6 +988,15 @@
     emitRoom({ type: 'bye' });  
     clearMessage(); // clear firebase
     stopAllConnection();
+  }
+
+  function signOut() {
+    firebaseAuth.signOut().then(() =>{
+      console.log('sign out.');
+    })
+    .catch((error) => {
+      console.log(`error occured when sign out: ${error}`);
+    });
   }
 
   function _assert(desc, v) {
