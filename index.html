@@ -58,9 +58,7 @@
   let uiConfig = {
     callbacks: {
       signInSuccessWithAuthResult: function(authResult, redirectUrl) {
-        // return true;
         console.log('authResult: %s, redirectUrl: %s', authResult, redirectUrl)
-        login();
       },
       uiShown: function() {
         document.getElementById('loader').style.display = 'none';
@@ -83,8 +81,6 @@
       console.log('sign in');
       $('#loader').hide();
       login();
-      //joinRoom();
-      //hoge();
     } else {
       // サインアウトした・サインインしていない
       console.log('NOT sign in');
@@ -170,60 +166,20 @@
           return;
         }
       });
-      //ref.orderByChild('uid').equalTo(firebaseAuth.currentUser.uid).on('value', function(snapshot) {
-      ////ref.orderByKey().equalTo(firebaseAuth.currentUser.uid).on('value', function(snapshot) {
-      //  if (snapshot.numChildren() === 1) {
-      //    // EXIST
-      //    console.log(`your room is: ${snapshot.val().rooms}`)
-      //    resolve();
-      //  } else if (snapshot.numChildren() > 1) {
-      //    console.error('too much account');
-      //  }
-      //  console.log(snapshot.val());
-      //  reject();
-      //  return;
-      //}, function (errorObject) {
-      //  console.log('The read failed: ' + errorObject.code);
-      //  reject();
-      //  return;
-      //});
     });
   }
 
-  /**
-   * 下記の処理を行う。
-   *     member 配下に新規ユーザアカウントを新規作成
-   *     room 配下に上記で作成したアカウントが所属するルームを新規作成
-   */
   function signUp() {
     return new Promise(function(resolve, reject) {
       var user = firebaseAuth.currentUser;
       console.log(`uid is: ${user.uid}`);
-      //var ref = database.ref(databaseRoot + '/member');
-      //// Attach an asynchronous callback to read the data at our posts reference
-      //ref.on('value', function(snapshot) {
-      //  console.log('snapshot.val: %O', snapshot.val());
-      //  //members.value += snapshot.val() + '\n';
-      //}, function (errorObject) {
-      //  console.log('The read failed: ' + errorObject.code);
-      //});
       // create new room
       let roomName = 'room_' + database.ref(databaseRoot + '/room').push().key;
-      //// for DEBUG
-      //let roomName = 'hoge';
-      //database.ref(databaseRoot + '/room' + '/' + roomName).child('members').push({ [user.uid] : true });
       database.ref(databaseRoot + '/room' + '/' + roomName).child('members').set({ [user.uid] : true });
       // NOTE: 下記の理由から、null ならば空文字を投入する。
       // - displayName は任意入力パラメータであり、未入力の場合は null となる
       // - Firebase Realtime Database には null は投入できない
       let name = user.displayName === null ? '' : user.displayName;
-      //let key = database.ref(databaseRoot + '/member').push({
-      //  uid : user.uid,
-      //  name : name,
-      //  rooms : { [roomName] : true },
-      //}).key;
-      //console.info(`key is: ${key}`);
-      //database.ref(databaseRoot + '/member/' + user.uid).push({
       database.ref(databaseRoot + '/member/' + user.uid).set({
         name : name,
         rooms : { [roomName] : true },
@@ -239,7 +195,6 @@
    */
   function joinRoom(room) {
     console.log('join room name = ' + room);
-
     let key = database.ref(databaseRoot + '/room/' + room + '/_join_').push({ joined : 'unknown'}).key;
     database.ref(databaseRoot + '/room/' + room + '/_join_').on('value', function(snapshot) {
       console.log(snapshot.val());
@@ -251,7 +206,6 @@
 
     roomBroadcastRef = database.ref(databaseRoot + '/room/' + room + '/_broadcast_');
     roomBroadcastRef.on('child_added', function(data) {
-      //console.log('roomBroadcastRef.on(data) data.key=' + data.key + ', data.val():', data.val());
       let message = data.val();
       let fromId = message.from;
       if (fromId === clientId) {
@@ -287,7 +241,6 @@
 
     clientRef = database.ref(databaseRoot + '/room/' + room + '/_direct_/' + clientId);
     clientRef.on('child_added', function(data) {
-      //console.log('clientRef.on(data)  data.key=' + data.key + ', data.val():', data.val());
       let message = data.val();
       let fromId = message.from;
 
@@ -356,7 +309,6 @@
   }
 
   /**
-   * @param {string} couplingId coupling ID
    * @return {string|null} roomName
    */
   function getRoomNameBy(couplingId) {
@@ -375,19 +327,6 @@
 
   }
 
-  /**
-   * @param {string} roomName name of room
-   */
-  function getMemberNamesFrom(roomName) {
-    //var ref = db.ref(databaseRoot + 'rooms');
-    var ref = database.ref(databaseRoot + roomName + '/_direct_');
-    // Attach an asynchronous callback to read the data at our posts reference
-    ref.on('value', function(snapshot) {
-      console.log('snapshot.val: %O', snapshot.val());
-      //members.value += snapshot.val() + '\n';
-    }, function (errorObject) {
-      console.log('The read failed: ' + errorObject.code);
-    });
   }
 
   // http://qiita.com/coa00@github/items/679b0b5c7c468698d53f
