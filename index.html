@@ -21,6 +21,7 @@
     <button type="button" onclick="hangUp();">Hang Up</button>
     <button type="button" onclick="signOut();">Sign Out</button>
     <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
+    <a id="room_link" href="" target="_blank">Open another window (link to this room)</a>
     <div>
       <textarea id="posted_contents" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
       <textarea id="posting_contents" style="width: 480px; height: 30px; border: 1px solid black;"></textarea>
@@ -277,10 +278,12 @@
         addIceCandidate(fromId, candidate);
       }
     });
+
+    setRoomLink(room);
   }
 
   function setRoomLink(room) {
-    let url = document.location.href;
+    let url = document.location.href + '?' + room;
     let anchorLink = document.getElementById('room_link');
     anchorLink.href = url;
     //let anchorMail = document.getElementById('mail_link');
