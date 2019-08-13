@@ -711,6 +711,7 @@
       // -- Trickle ICE の場合は、初期SDPを相手に送る -- 
       // -- Vanilla ICE の場合には、まだSDPは送らない --
       if (!useVanilla) {
+        // NOTE: このときの peerConenction.localDescription.type は 'answer'
         sendSdp(id, peerConnection.localDescription);
       }
     }).catch(function(err) {
