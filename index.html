@@ -122,6 +122,7 @@
   let clientRef;
   let clientId;
   let room = null;
+  let passedRoomName = getRoomNameFromURL();
 
   function login() {
     var user = firebaseAuth.currentUser;
@@ -134,10 +135,20 @@
     //  // Handle error
     //  console.log(`error occured when get ID token: ${error}`);
     //});
-    // まずユーザアカウントの有無をチェック。
+    console.log(`uid is: ${user.uid}`);
+
+    // ユーザアカウントの有無をチェック。
     existsGopreAccount()
-    .then(getRoomName, signUp)
-    .then(joinRoom, debugFail);
+    //.then(accountExists => signUp(accountExists))
+    .then(null, signUp)
+    //.then(result => getRoomName(result))
+    .then(getRoomName, null)
+    //.then(joinRoom, debugFail);
+    .then(roomName => joinRoom(roomName))
+    .catch(error => function(error) {
+      console.error(error);
+    });
+
     $('#logined_user').text(user.displayName || user.email);
     $('#firebaseui-auth-container').fadeOut();
     $('#after_login').slideDown('slow');
@@ -171,25 +182,22 @@
 
   function signUp() {
     return new Promise(function(resolve, reject) {
-      var user = firebaseAuth.currentUser;
+      let myRoom = null;
+      let user = firebaseAuth.currentUser;
       console.log(`uid is: ${user.uid}`);
-      // create new room
-      let roomName = 'room_' + database.ref(databaseRoot + '/room').push().key;
-      database.ref(databaseRoot + '/room' + '/' + roomName).child('members').set({ [user.uid] : true });
+      // if not invited, room is blank string.
+      //database.ref(databaseRoot + '/room/' + room).child('members/' + user.uid).set(true);
       // NOTE: 下記の理由から、null ならば空文字を投入する。
       // - displayName は任意入力パラメータであり、未入力の場合は null となる
       // - Firebase Realtime Database には null は投入できない
       let name = user.displayName === null ? '' : user.displayName;
       database.ref(databaseRoot + '/member/' + user.uid).set({
         name : name,
-        rooms : { [roomName] : true },
       });
-      resolve(roomName);
-      //database.ref(databaseRoot + '/member' + '/' + key).child('rooms').set({ [roomName] : true });
-      //reject();
-      //return;
+      resolve();
     });
   }
+
   /**
    * @param {string} room room name.
    */
@@ -290,43 +298,75 @@
   }
 
   // -- room名を取得 --
-  function getRoomName() { // たとえば、 URLに  ?roomname  とする
+  function getRoomNameFromURL() { // たとえば、 URLに  ?roomname  とする
+    let room = null;
     let url = document.location.href;
     let args = url.split('?');
     if (args.length > 1) {
       // ルーム名を指定した場合
-      let room = args[1];
+      room = args[1];
       if (room != '') {
         return room;
       }
     }
     
     // ルーム名を指定しなかった場合
-    // generate random room, and replace URL
-    let room = 'room_' + getUniqueStr(); 
-    window.history.pushState(null, null, 'index.html?' + room);
-    return room;
+    //// generate random room, and replace URL
+    //let room = 'room_' + getUniqueStr(); 
+    //window.history.pushState(null, null, 'index.html?' + room);
+    //return room;
+    return null;
   }
 
   /**
    * @return {string|null} roomName
    */
-  function getRoomNameBy(couplingId) {
-    var roomName = null;
-    var data = [
-      { coupling_id: "hoge", room_name: "room_A" },
-      { coupling_id: "fuga", room_name: "room_B" }
-    ]
-    data.find(d => {
-      if (d.coupling_id === couplingId) {
-        roomName = d.room_name;
+  function getRoomName() {
+    return new Promise(function(resolve, reject) {
+      let user = firebaseAuth.currentUser;
+      //if (accountExists) console.log('account exists!');
+      if (passedRoomName) {
+        room = passedRoomName;
+        resolve(passedRoomName);
+      } else {
+        // create room
+        room = 'room_' + database.ref(databaseRoot + '/room').push().key;
+        database.ref(databaseRoot + '/room/' + room).child('members/' + firebaseAuth.currentUser.uid).set(true);
+        var ref = database.ref(databaseRoot + '/room');
+        // Attach an asynchronous callback to read the data at our posts reference
+        ref.orderByChild('members').once('value', function(snapshot){
+        //ref.orderByChild('members').child(firebaseAuth.currentUser.uid).on('value', function(snapshot) {
+          console.log(`snapshot.val: ${snapshot.val()}`);
+          snapshot.forEach((hogesnap) => {
+            console.log(`hogesnap.val: ${hogesnap.val()}`);
+            console.log(`hogesnap.key: ${hogesnap.key}`);
+            // hogesnap.key is ROOM NAME
+            var rref = database.ref(databaseRoot + '/room/' + hogesnap.key + '/members/' + firebaseAuth.currentUser.uid);
+            rref.orderByKey().equalTo(firebaseAuth.currentUser.uid).once('value', function(fugasnap) {
+            //rref.orderByKey().equalTo('asdfaadfa').on('value', function(fugasnap) {
+            //rref.on('value', function(fugasnap) {
+              console.log(`fugasnap.val: ${fugasnap.val()}`);
+              console.log(`fugasnap.key: ${fugasnap.key}`);
+              if (fugasnap.key  === user.uid) {
+                //return
+                if (!hogesnap.key) {
+                  resolve(hogesnap.key);
+                } else {
+                  database.ref(databaseRoot + '/member/' + user.uid).set({
+                    rooms : { [room] : true },
+                  });
+                  resolve(room);
+                }
+              }
+            })
+          })
+        }, function (errorObject) {
+          console.log('The read failed: ' + errorObject.code);
+          reject();
+          return;
+        });
       }
     });
-    return roomName;
-  }
-
-  }
-
   }
 
   // http://qiita.com/coa00@github/items/679b0b5c7c468698d53f
