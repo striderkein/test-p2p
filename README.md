@@ -50,5 +50,3 @@ freenom を使用して下記のドメインを取得（無料）
 ninkatsu-p2p.ga
 ninkatsu-sig.ga
 
-### これを使った方がいいのかも？？？
-[発表]Amazon API GatewayでWebsocketが利用可能: https://aws.amazon.com/jp/blogs/news/announcing-websocket-apis-in-amazon-api-gateway/
