@@ -1,7 +1,8 @@
 # 妊活P2Pについて
 
-## sample
-https://shirow-ozawa.github.io/test-p2p/
+## 実動サンプル
+<strike>https://shirow-ozawa.github.io/test-p2p/</strike>
+https://mulodo-japan.github.io/test-p2p/
 
 ## WebRTC P2P 概要
 シグナリングサーバを介して「メッセージ」を送信する。
