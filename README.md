@@ -30,6 +30,11 @@ NAT 越えおよび Firewall 越えのためには ICE candidate を送信する
 <strike>-> メディアストリームを取得するためには、プロトコルが HTTPS である必要がある（ブラウザの実装）</strike>
 -> 間違いでした。正しくは、「NAT や Firewall 下にある端末の接続情報を取得するには Vanilla ICE を使用する必要がある」でした。
 
+## 課題
+* どうやって同じルームに入室するか？  
+  後からサインアップしたユーザにルーム名を通知する手段をどうするか？  
+  ↓これが使えそう（というかこれしかない気すらする）  
+  "Firebase Dynamic Links": https://firebase.google.com/docs/dynamic-links?hl=ja
 
 ## 実装メモ
 ### server-info
