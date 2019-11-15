@@ -9,11 +9,7 @@ RTCDataChannel を使用して文字列、オブジェクトの送受信を行�
 
 ## 要件の検証
 - 文字列は送信可能か -> 可能
-- 画像は送信可能か   -> 可能。方法は下記の通り。
-  JavaScript の FileAPI を使用してファイルをアップロード
-	-> HTML5 の Canvas オブジェクトに描画
-  -> Canvas から Blob オブジェクトを作成
-  -> Blob オブジェクトをBASE64エンコードした文字列として送信する。
+- 画像は送信可能か   -> 可能。方法は 実装メモ 参照。
 - NAT 越えは可能か -> 可能。STUN サーバを用意して使用する（後述）。
 - Firewall 越えは可能か -> 可能。TURN サーバを用意して使用する（後述）。
 
@@ -44,6 +40,11 @@ sig:      ec2-52-68-208-246.ap-northeast-1.compute.amazonaws.com  elastic -> wss
 www, sig: ec2-13-114-195-158.ap-northeast-1.compute.amazonaws.com elastic -> obsoleted
 www:      https://shirow-ozawa.github.io/test-p2p/
 TURN:     ec2-13-115-2-96.ap-northeast-1.compute.amazonaws.com    elastic
+### 画像の送信
+  JavaScript の FileAPI を使用してファイルをアップロード
+	-> HTML5 の Canvas オブジェクトに描画
+  -> Canvas から Blob オブジェクトを作成
+  -> Blob オブジェクトをBASE64エンコードした文字列として送信する。
 
 ### domain
 freenom を使用して下記のドメインを取得（無料）
