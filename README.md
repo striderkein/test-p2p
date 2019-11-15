@@ -33,10 +33,13 @@ NAT 越えおよび Firewall 越えのためには ICE candidate を送信する
 
 ## 実装メモ
 ### server-info
-sig:      ec2-52-68-208-246.ap-northeast-1.compute.amazonaws.com  elastic -> wss://ninkatsu-sig.ga:3001
-www, sig: ec2-13-114-195-158.ap-northeast-1.compute.amazonaws.com elastic -> obsoleted
-www:      https://shirow-ozawa.github.io/test-p2p/
-TURN:     ec2-13-115-2-96.ap-northeast-1.compute.amazonaws.com    elastic
+* シグナリングサーバ(using Firebase Realtime Database)  
+  https://ninkatsu-sig-fire.firebaseio.com
+* アプリサーバ(というか GitHub Pages)  
+  https://shirow-ozawa.github.io/test-p2p/
+* TURN サーバ  
+  ec2-13-115-2-96.ap-northeast-1.compute.amazonaws.com    elasticIP使用  
+
 ### 画像の送信
   JavaScript の FileAPI を使用してファイルをアップロード
 	-> HTML5 の Canvas オブジェクトに描画
