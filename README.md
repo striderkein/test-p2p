@@ -5,8 +5,7 @@
 https://mulodo-japan.github.io/test-p2p/
 
 ## WebRTC P2P 概要
-シグナリングサーバを介して「メッセージ」を送信する。
-送信できるのは文字列のみ。
+RTCDataChannel を使用して文字列、オブジェクトの送受信を行う。
 
 ## 要件の検証
 - 文字列は送信可能か -> 可能
