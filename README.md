@@ -30,9 +30,6 @@ NAT 越えおよび Firewall 越えのためには ICE candidate を送信する
 <strike>-> メディアストリームを取得するためには、プロトコルが HTTPS である必要がある（ブラウザの実装）</strike>
 -> 間違いでした。正しくは、「NAT や Firewall 下にある端末の接続情報を取得するには Vanilla ICE を使用する必要がある」でした。
 
-## 後から分かったこと
-DataChannel というものがあり、そちらだとオブジェクトもそのまま送れる。
--> 文字列の送受信のみ、確認済み。
 
 ## 実装メモ
 ### server-info
@@ -50,6 +47,3 @@ TURN:     ec2-13-115-2-96.ap-northeast-1.compute.amazonaws.com    elastic
 freenom を使用して下記のドメインを取得（無料）
 ninkatsu-p2p.ga
 ninkatsu-sig.ga
-
-### これを使った方がいいのかも？？？
-[発表]Amazon API GatewayでWebsocketが利用可能: https://aws.amazon.com/jp/blogs/news/announcing-websocket-apis-in-amazon-api-gateway/
