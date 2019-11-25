@@ -55,7 +55,6 @@
 <script>
   let databaseRoot = 'ninkatsu-p2p/multi/'; // <--- plaase set your database root for signaling
   let database = firebase.database();
-  let firebaseAuth = firebase.auth();
   // Initialize the FirebaseUI Widget using Firebase.
   let ui = new firebaseui.auth.AuthUI(firebaseAuth);
   let uiConfig = {
@@ -78,7 +77,7 @@
     ],
   };
 
-  firebaseAuth.onAuthStateChanged(function(user){
+  firebase.auth().onAuthStateChanged(function(user){
     if (user) {
       // サインインした・している
       console.log('sign in');
@@ -128,7 +127,7 @@
   let passedRoomName = getRoomNameFromURL();
 
   function login() {
-    var user = firebaseAuth.currentUser;
+    var user = firebase.auth().currentUser;
     console.log(`uid is: ${user.uid}`);
 
     // ユーザアカウントの有無をチェック。
@@ -160,7 +159,7 @@
       var ref = database.ref(databaseRoot + '/member');
       // Attach an asynchronous callback to read the data at our posts reference
       ref.once('value', function(snapshot) {
-        if (snapshot.hasChild(firebaseAuth.currentUser.uid)) {
+        if (snapshot.hasChild(firebase.auth().currentUser.uid)) {
           console.log('account exists!');
           resolve();
         } else {
@@ -174,7 +173,7 @@
   function signUp() {
     return new Promise(function(resolve, reject) {
       let myRoom = null;
-      let user = firebaseAuth.currentUser;
+      let user = firebase.auth().currentUser;
       console.log(`uid is: ${user.uid}`);
       // if not invited, room is blank string.
       //database.ref(databaseRoot + '/room/' + room).child('members/' + user.uid).set(true);
@@ -199,7 +198,7 @@
       console.log(snapshot.val());
     });
     //clientId = 'member_' + key;
-    clientId = firebaseAuth.currentUser.uid;
+    clientId = firebase.auth().currentUser.uid;
     console.log('joined to room=' + room + ' as clientId=' + clientId);
     database.ref(databaseRoot + '/room/' + room + '/_join_/' + key).update({ joined : clientId});
 
@@ -316,7 +315,7 @@
    */
   function getRoomName() {
     return new Promise(function(resolve, reject) {
-      let user = firebaseAuth.currentUser;
+      let user = firebase.auth().currentUser;
       //if (accountExists) console.log('account exists!');
       if (passedRoomName) {
         room = passedRoomName;
@@ -324,7 +323,7 @@
       } else {
         // create room
         room = 'room_' + database.ref(databaseRoot + '/room').push().key;
-        database.ref(databaseRoot + '/room/' + room).child('members/' + firebaseAuth.currentUser.uid).set(true);
+        database.ref(databaseRoot + '/room/' + room).child('members/' + user.uid).set(true);
         var ref = database.ref(databaseRoot + '/room');
         // Attach an asynchronous callback to read the data at our posts reference
         ref.orderByChild('members').once('value', function(snapshot){
@@ -333,8 +332,8 @@
             console.log(`hogesnap.val: ${hogesnap.val()}`);
             console.log(`hogesnap.key: ${hogesnap.key}`);
             // hogesnap.key is ROOM NAME
-            var rref = database.ref(databaseRoot + '/room/' + hogesnap.key + '/members/' + firebaseAuth.currentUser.uid);
-            rref.orderByKey().equalTo(firebaseAuth.currentUser.uid).once('value', function(fugasnap) {
+            var rref = database.ref(databaseRoot + '/room/' + hogesnap.key + '/members/' + user.uid);
+            rref.orderByKey().equalTo(user.uid).once('value', function(fugasnap) {
               console.log(`fugasnap.val: ${fugasnap.val()}`);
               console.log(`fugasnap.key: ${fugasnap.key}`);
               if (fugasnap.key  === user.uid) {
@@ -977,7 +976,7 @@
   }
 
   function signOut() {
-    firebaseAuth.signOut().then(() =>{
+    firebase.auth().signOut().then(() =>{
       console.log('sign out.');
     })
     .catch((error) => {
