@@ -325,7 +325,7 @@
   }
 
   /**
-   * @return {string|null} roomName
+   * @return {Promise}
    */
   function getRoomName() {
     return new Promise(function(resolve, reject) {
@@ -339,6 +339,7 @@
         room = 'room_' + database.ref(databaseRoot + '/room').push().key;
         database.ref(databaseRoot + '/room/' + room).child('members/' + user.uid).set(true);
         var ref = database.ref(databaseRoot + '/room');
+        // NOTE: room/members 以下に「現在のログインユーザID が存在するか」を検索する処理
         // Attach an asynchronous callback to read the data at our posts reference
         ref.orderByChild('members').once('value', function(snapshot){
           console.log(`snapshot.val: ${snapshot.val()}`);
