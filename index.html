@@ -538,10 +538,12 @@
     ]};
      */
     let turnUrl = 'ec2-13-115-2-96.ap-northeast-1.compute.amazonaws.com';
+    let turnUserName = 'turnuser';
+    let turnUserPW = 'YBbtWvoZE1xjlWHS';
     let pc_config = {"iceServers":[
       {"urls": "stun:" + turnUrl + ":80"},
-      {"urls":"turn:" + turnUrl + ":80?transport=udp", "username":"turnuser", "credential":"YBbtWvoZE1xjlWHS"},
-      {"urls":"turn:" + turnUrl + ":80?transport=tcp", "username":"turnuser", "credential":"YBbtWvoZE1xjlWHS"}
+      {"urls":"turn:" + turnUrl + ":80?transport=udp", "username":turnUserName, "credential":turnUserPW},
+      {"urls":"turn:" + turnUrl + ":80?transport=tcp", "username":turnUserName, "credential":turnUserPW}
     ]};
     let peer = new RTCPeerConnection(pc_config);
 
