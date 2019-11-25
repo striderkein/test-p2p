@@ -1,59 +1,66 @@
-# 妊活P2Pについて
+# about this Application
+ninkatsu P2Pチャットを行うアプリケーションの Web 版である。
+
+__システム構成__ および __動作概要__ については https://github.com/shirow-ozawa/ninkatsu-P2P を参照。
 
 ## 実動サンプル
-<strike>https://shirow-ozawa.github.io/test-p2p/</strike>
 https://mulodo-japan.github.io/test-p2p/
+※ バックエンドで呼び出している STUN/TURNサーバのインスタンスは 2019-11-30 に削除予定。それ以降はサーバを別途用意し、下記手順に従ってサーバURL等の再設定を行わないと正常に動作しない。
 
-## WebRTC P2P 概要
-RTCDataChannel を使用して文字列、オブジェクトの送受信を行う。
+## How to start develop
+前提: STUN/TURNサーバが設定済みであること。
 
-## 要件の検証
-- 文字列は送信可能か -> 可能
-- 画像は送信可能か   -> 可能。方法は 実装メモ 参照。
-- NAT 越えは可能か -> 可能。STUN サーバを用意して使用する（後述）。
-- Firewall 越えは可能か -> 可能。TURN サーバを用意して使用する（後述）。
+用意したSTUN/TURNサーバの設定に合わせて turnUrl, turnUserName, turnUserPW を設定する。
 
-## 結論
-- 下記すべての SSL/TLS 化が必要。
-  - アプリ（Web）サーバ
-  - シグナリングサーバ
-  - TURN サーバ（※ 必須ではないが事実上必須）
-- <strike>video または audio へのアクセスが必須で、それについてのユーザによる許可を得る必要がある</strike>
-<strike>
-根拠: https://developer.mozilla.org/ja/docs/Web/API/MediaDevices/getUserMedia
-</strike>
+## How to Login
+https://mulodo-japan.github.io/test-p2p/ (以下、APP_URL）にアクセスする。
 
-## 詳細
-ここ全部書き直し。
-<strike>
-NAT 越えおよび Firewall 越えのためには ICE candidate を送信する必要がある
--> ICE candidate は、RTCPeerConnection オブジェクトのコールバック関数でしか収集・送信されない
--> RTCPeerConnection オブジェクトのコールバック関数が呼ばれるためには、同オブジェクトに何らかのメディアストリームを追加する必要がある
--> メディアストリームを取得するためには、プロトコルが HTTPS である必要がある（ブラウザの実装）
--> 間違いでした。正しくは、「NAT や Firewall 下にある端末の接続情報を取得するには Vanilla ICE を使用する必要がある」でした。</strike>
+下記アカウントのいずれかでログインを行う。パスワードはいずれも `password`  
+taro@hoge.com  
+hanako@hoge.com  
+jiro@fuga.com  
+tamako@fuga.com  
 
-## 課題
-* どうやって同じルームに入室するか？  
-  後からサインアップしたユーザにルーム名を通知する手段をどうするか？  
-  ↓これが使えそう（というかこれしかない気すらする）  
-  "Firebase Dynamic Links": https://firebase.google.com/docs/dynamic-links?hl=ja
+なお、  
+taro@hoge.com と hanako@hoge.com  
+jiro@fuga.com と tamako@fuga.com  
+がそれぞれカップルである想定。
+
+以下、 taro@hoge.com が先にログインし hanako@hoge.com が後からログインするものとする。
+
+### ルームの作成（taro）
+Firebase Authentication によるユーザ認証が完了すると「ルーム」が作成される。  
+ルームの実体は、Firebase Realtime Database のオブジェクト。  
+
+ルームの例: https://ninkatsu-sig-fire.firebaseio.com/ninkatsu-p2p/multi/room/room_-Lq03h5qCthdesrbdZAj
+
+この結果、下記のようにオブジェクトが作成される。
+- <ルーム>/<ルームID>/members 以下に `{ key: <taroのUID>, value: true }`
+- member/<taroのUID>/rooms 以下に `{ key: <ルームID>, value: true }`
+
+### 入室（hanako）
+APP_URL?<ルームID> をブラウザで開く。ルームID は taro がログインした際に表示されるアラートからコピーする。  
+
+### チャットの流れ
+1. taro, hanako どちらかが Connect ボタンを押下する。その際、SDP to send, SDP received に 交換された SDP が自動的に表示される。
+1. posting_contents にチャットメッセージを書き込み、 Post を押下して投稿する。
+1. taro, hanako 両方のウインドウの posted_contents に投稿が表示される。
+1. Hang up を押下すると P2P 接続が終了する。
+1. Sign up を押下すると Firebase Authentication のログイン状態が「ログアウト」になる。
+
+### 同一マシンで検証を行う場合の注意点
+一度ログインを行うと __明示的にログアウトを行わない限りログイン状態が継続する__ (*1) ので、同一マシン上で動作確認を行う場合は下記のようにする必要がある。
+- __別のブラウザ__ （例：Chrome と Firefox）を立ち上げる
+- __異なる Google アカウントでログインしたウインドウを開く__（Chrome の場合）
+
+## TODO
+* Sign Out を行った後ルーム削除する処理の実装
 
 ## 実装メモ
-### server-info
-* シグナリングサーバ(using Firebase Realtime Database)  
-  https://ninkatsu-sig-fire.firebaseio.com
-* アプリサーバ(というか GitHub Pages)  
-  https://shirow-ozawa.github.io/test-p2p/
-* TURN サーバ  
-  ec2-13-115-2-96.ap-northeast-1.compute.amazonaws.com    elasticIP使用  
-
 ### 画像の送信
-  JavaScript の FileAPI を使用してファイルをアップロード
-	-> HTML5 の Canvas オブジェクトに描画
-  -> Canvas から Blob オブジェクトを作成
-  -> Blob オブジェクトをBASE64エンコードした文字列として送信する。
+JavaScript の FileAPI を使用してファイルをアップロード  
+-> HTML5 の Canvas オブジェクトに描画  
+-> Canvas から Blob オブジェクトを作成  
+-> Blob オブジェクトをBASE64エンコードした文字列として送信する。
 
-### domain
-freenom を使用して下記のドメインを取得（無料）
-ninkatsu-p2p.ga
-ninkatsu-sig.ga
+*1 firebase.auth().setPersistence で変更可能。詳細は https://firebase.google.com/docs/auth/web/auth-state-persistence?hl=ja 参照。
