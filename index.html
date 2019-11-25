@@ -54,7 +54,6 @@
 <script src="./scripts/init-firebase.js"></script>
 <script>
   let databaseRoot = 'ninkatsu-p2p/multi/'; // <--- plaase set your database root for signaling
-  //let databaseRoot = 'ninkatsu-p2p/'; // <--- plaase set your database root for signaling
   let database = firebase.database();
   let firebaseAuth = firebase.auth();
   // Initialize the FirebaseUI Widget using Firebase.
@@ -130,24 +129,12 @@
 
   function login() {
     var user = firebaseAuth.currentUser;
-    // for DEBUG
-    //user.getIdToken(/* forceRefresh */ true).then(function(idToken) {
-    //  // Send token to your backend via HTTPS
-    //  // ...
-    //  console.info(`idToken: ${idToken}`);
-    //}).catch(function(error) {
-    //  // Handle error
-    //  console.log(`error occured when get ID token: ${error}`);
-    //});
     console.log(`uid is: ${user.uid}`);
 
     // ユーザアカウントの有無をチェック。
     existsGopreAccount()
-    //.then(accountExists => signUp(accountExists))
     .then(null, signUp)
-    //.then(result => getRoomName(result))
     .then(getRoomName, null)
-    //.then(joinRoom, debugFail);
     .then(roomName => joinRoom(roomName))
     .catch(error => function(error) {
       console.error(error);
@@ -341,7 +328,6 @@
         var ref = database.ref(databaseRoot + '/room');
         // Attach an asynchronous callback to read the data at our posts reference
         ref.orderByChild('members').once('value', function(snapshot){
-        //ref.orderByChild('members').child(firebaseAuth.currentUser.uid).on('value', function(snapshot) {
           console.log(`snapshot.val: ${snapshot.val()}`);
           snapshot.forEach((hogesnap) => {
             console.log(`hogesnap.val: ${hogesnap.val()}`);
@@ -349,12 +335,9 @@
             // hogesnap.key is ROOM NAME
             var rref = database.ref(databaseRoot + '/room/' + hogesnap.key + '/members/' + firebaseAuth.currentUser.uid);
             rref.orderByKey().equalTo(firebaseAuth.currentUser.uid).once('value', function(fugasnap) {
-            //rref.orderByKey().equalTo('asdfaadfa').on('value', function(fugasnap) {
-            //rref.on('value', function(fugasnap) {
               console.log(`fugasnap.val: ${fugasnap.val()}`);
               console.log(`fugasnap.key: ${fugasnap.key}`);
               if (fugasnap.key  === user.uid) {
-                //return
                 if (!hogesnap.key) {
                   resolve(hogesnap.key);
                 } else {
