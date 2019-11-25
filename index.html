@@ -56,7 +56,7 @@
   let databaseRoot = 'ninkatsu-p2p/multi/'; // <--- plaase set your database root for signaling
   let database = firebase.database();
   // Initialize the FirebaseUI Widget using Firebase.
-  let ui = new firebaseui.auth.AuthUI(firebaseAuth);
+  let ui = new firebaseui.auth.AuthUI(firebase.auth());
   let uiConfig = {
     callbacks: {
       signInSuccessWithAuthResult: function(authResult, redirectUrl) {
