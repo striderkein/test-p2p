@@ -78,6 +78,19 @@
     ],
   };
 
+  // 存在確認済のメールアドレスかどうか(true or false)
+  //var verified = firebase.auth().currentUser.emailVerified;
+  //console.log(verified);
+  //
+  //// 未確認のメールアドレスの場合、メールを送信する
+  //if (!verified) {
+  //  // メール送信処理
+  //  firebase.auth().currentUser.sendEmailVerification();
+  //
+  //  var email = firebase.auth().currentUser.email;
+  //  console.log('確認メールを送信しました。', email);
+  //}
+
   firebase.auth().onAuthStateChanged(function(user){
     if (user) {
       // サインインした・している
