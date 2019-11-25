@@ -21,9 +21,11 @@
     <button type="button" onclick="hangUp();">Hang Up</button>
     <button type="button" onclick="signOut();">Sign Out</button>
     <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
-    <a id="room_link" href="" target="_blank">Open another window (link to this room)</a>
+    <!-- <a id="room_link" href="" target="_blank">Open another window (link to this room)</a> -->
     <div>
+      <label for="posted_contents">posted_contents</label>
       <textarea id="posted_contents" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
+      <label for="posting_contents">posting_contents</label>
       <textarea id="posting_contents" style="width: 480px; height: 30px; border: 1px solid black;"></textarea>
     </div>
     <!-- ファイル選択ボタン -->
@@ -48,14 +50,13 @@
 <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/6.3.1/firebase-auth.js"></script>
 <script src="https://code.jquery.com/jquery-3.4.1.min.js" integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
 <script src="./scripts/init-firebase.js"></script>
 <script>
   let databaseRoot = 'ninkatsu-p2p/multi/'; // <--- plaase set your database root for signaling
-  //let databaseRoot = 'ninkatsu-p2p/'; // <--- plaase set your database root for signaling
   let database = firebase.database();
-  let firebaseAuth = firebase.auth();
   // Initialize the FirebaseUI Widget using Firebase.
-  let ui = new firebaseui.auth.AuthUI(firebaseAuth);
+  let ui = new firebaseui.auth.AuthUI(firebase.auth());
   let uiConfig = {
     callbacks: {
       signInSuccessWithAuthResult: function(authResult, redirectUrl) {
@@ -65,7 +66,8 @@
         document.getElementById('loader').style.display = 'none';
       }
     },
-    signInFlow: 'popup',
+    // 'redirect' is default.
+    //signInFlow: 'popup',
     // signInSuccessUrl: './success.html',
     signInSuccessUrl: './index.html',
     signInOptions: [
@@ -76,7 +78,20 @@
     ],
   };
 
-  firebaseAuth.onAuthStateChanged(function(user){
+  // 存在確認済のメールアドレスかどうか(true or false)
+  //var verified = firebase.auth().currentUser.emailVerified;
+  //console.log(verified);
+  //
+  //// 未確認のメールアドレスの場合、メールを送信する
+  //if (!verified) {
+  //  // メール送信処理
+  //  firebase.auth().currentUser.sendEmailVerification();
+  //
+  //  var email = firebase.auth().currentUser.email;
+  //  console.log('確認メールを送信しました。', email);
+  //}
+
+  firebase.auth().onAuthStateChanged(function(user){
     if (user) {
       // サインインした・している
       console.log('sign in');
@@ -126,25 +141,13 @@
   let passedRoomName = getRoomNameFromURL();
 
   function login() {
-    var user = firebaseAuth.currentUser;
-    // for DEBUG
-    //user.getIdToken(/* forceRefresh */ true).then(function(idToken) {
-    //  // Send token to your backend via HTTPS
-    //  // ...
-    //  console.info(`idToken: ${idToken}`);
-    //}).catch(function(error) {
-    //  // Handle error
-    //  console.log(`error occured when get ID token: ${error}`);
-    //});
+    var user = firebase.auth().currentUser;
     console.log(`uid is: ${user.uid}`);
 
     // ユーザアカウントの有無をチェック。
     existsGopreAccount()
-    //.then(accountExists => signUp(accountExists))
     .then(null, signUp)
-    //.then(result => getRoomName(result))
     .then(getRoomName, null)
-    //.then(joinRoom, debugFail);
     .then(roomName => joinRoom(roomName))
     .catch(error => function(error) {
       console.error(error);
@@ -170,7 +173,7 @@
       var ref = database.ref(databaseRoot + '/member');
       // Attach an asynchronous callback to read the data at our posts reference
       ref.once('value', function(snapshot) {
-        if (snapshot.hasChild(firebaseAuth.currentUser.uid)) {
+        if (snapshot.hasChild(firebase.auth().currentUser.uid)) {
           console.log('account exists!');
           resolve();
         } else {
@@ -184,7 +187,7 @@
   function signUp() {
     return new Promise(function(resolve, reject) {
       let myRoom = null;
-      let user = firebaseAuth.currentUser;
+      let user = firebase.auth().currentUser;
       console.log(`uid is: ${user.uid}`);
       // if not invited, room is blank string.
       //database.ref(databaseRoot + '/room/' + room).child('members/' + user.uid).set(true);
@@ -209,7 +212,7 @@
       console.log(snapshot.val());
     });
     //clientId = 'member_' + key;
-    clientId = firebaseAuth.currentUser.uid;
+    clientId = firebase.auth().currentUser.uid;
     console.log('joined to room=' + room + ' as clientId=' + clientId);
     database.ref(databaseRoot + '/room/' + room + '/_join_/' + key).update({ joined : clientId});
 
@@ -279,7 +282,8 @@
       }
     });
 
-    setRoomLink(room);
+    // setRoomLink(room);
+    alertRoomLink(room);
   }
 
   function setRoomLink(room) {
@@ -290,6 +294,12 @@
     //let mailtoUrl = 'mailto:?subject=invitation-of-multi-party-chat&body=' + url;
     //anchorMail.href = mailtoUrl;
   }
+
+  function alertRoomLink(room) {
+    let url = document.location.href + '?' + room;
+    alert(url);
+  }
+
   // ----- use firebase.io ---- //
 
   /**
@@ -322,11 +332,11 @@
   }
 
   /**
-   * @return {string|null} roomName
+   * @return {Promise}
    */
   function getRoomName() {
     return new Promise(function(resolve, reject) {
-      let user = firebaseAuth.currentUser;
+      let user = firebase.auth().currentUser;
       //if (accountExists) console.log('account exists!');
       if (passedRoomName) {
         room = passedRoomName;
@@ -334,24 +344,21 @@
       } else {
         // create room
         room = 'room_' + database.ref(databaseRoot + '/room').push().key;
-        database.ref(databaseRoot + '/room/' + room).child('members/' + firebaseAuth.currentUser.uid).set(true);
+        database.ref(databaseRoot + '/room/' + room).child('members/' + user.uid).set(true);
         var ref = database.ref(databaseRoot + '/room');
+        // NOTE: room/members 以下に「現在のログインユーザID が存在するか」を検索する処理
         // Attach an asynchronous callback to read the data at our posts reference
         ref.orderByChild('members').once('value', function(snapshot){
-        //ref.orderByChild('members').child(firebaseAuth.currentUser.uid).on('value', function(snapshot) {
           console.log(`snapshot.val: ${snapshot.val()}`);
           snapshot.forEach((hogesnap) => {
             console.log(`hogesnap.val: ${hogesnap.val()}`);
             console.log(`hogesnap.key: ${hogesnap.key}`);
             // hogesnap.key is ROOM NAME
-            var rref = database.ref(databaseRoot + '/room/' + hogesnap.key + '/members/' + firebaseAuth.currentUser.uid);
-            rref.orderByKey().equalTo(firebaseAuth.currentUser.uid).once('value', function(fugasnap) {
-            //rref.orderByKey().equalTo('asdfaadfa').on('value', function(fugasnap) {
-            //rref.on('value', function(fugasnap) {
+            var rref = database.ref(databaseRoot + '/room/' + hogesnap.key + '/members/' + user.uid);
+            rref.orderByKey().equalTo(user.uid).once('value', function(fugasnap) {
               console.log(`fugasnap.val: ${fugasnap.val()}`);
               console.log(`fugasnap.key: ${fugasnap.key}`);
               if (fugasnap.key  === user.uid) {
-                //return
                 if (!hogesnap.key) {
                   resolve(hogesnap.key);
                 } else {
@@ -538,10 +545,12 @@
     ]};
      */
     let turnUrl = 'ec2-13-115-2-96.ap-northeast-1.compute.amazonaws.com';
+    let turnUserName = 'turnuser';
+    let turnUserPW = 'YBbtWvoZE1xjlWHS';
     let pc_config = {"iceServers":[
       {"urls": "stun:" + turnUrl + ":80"},
-      {"urls":"turn:" + turnUrl + ":80?transport=udp", "username":"turnuser", "credential":"YBbtWvoZE1xjlWHS"},
-      {"urls":"turn:" + turnUrl + ":80?transport=tcp", "username":"turnuser", "credential":"YBbtWvoZE1xjlWHS"}
+      {"urls":"turn:" + turnUrl + ":80?transport=udp", "username":turnUserName, "credential":turnUserPW},
+      {"urls":"turn:" + turnUrl + ":80?transport=tcp", "username":turnUserName, "credential":turnUserPW}
     ]};
     let peer = new RTCPeerConnection(pc_config);
 
@@ -907,7 +916,7 @@
         doPost(posting, e.target.result);
       }
       reader.readAsDataURL(blob);
-   } else {
+    } else {
       doPost(posting, '');
     }
   }
@@ -991,7 +1000,7 @@
   }
 
   function signOut() {
-    firebaseAuth.signOut().then(() =>{
+    firebase.auth().signOut().then(() =>{
       console.log('sign out.');
     })
     .catch((error) => {
