@@ -21,7 +21,7 @@
     <button type="button" onclick="hangUp();">Hang Up</button>
     <button type="button" onclick="signOut();">Sign Out</button>
     <input type="checkbox" name="use_vanilla" onclick="activateVanilla(this);" />use Vanilla
-    <a id="room_link" href="" target="_blank">Open another window (link to this room)</a>
+    <!-- <a id="room_link" href="" target="_blank">Open another window (link to this room)</a> -->
     <div>
       <label for="posted_contents">posted_contents</label>
       <textarea id="posted_contents" style="width: 480px; height: 160px; border: 1px solid black;"></textarea>
@@ -282,7 +282,8 @@
       }
     });
 
-    setRoomLink(room);
+    // setRoomLink(room);
+    alertRoomLink(room);
   }
 
   function setRoomLink(room) {
@@ -293,6 +294,12 @@
     //let mailtoUrl = 'mailto:?subject=invitation-of-multi-party-chat&body=' + url;
     //anchorMail.href = mailtoUrl;
   }
+
+  function alertRoomLink(room) {
+    let url = document.location.href + '?' + room;
+    alert(url);
+  }
+
   // ----- use firebase.io ---- //
 
   /**
