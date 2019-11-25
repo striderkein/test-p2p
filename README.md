@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # about this Application
 ninkatsu P2Pチャットを行うアプリケーションの Web 版である。
 
